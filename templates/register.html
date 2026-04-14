@@ -1,0 +1,125 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register - Voluntee</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+
+        body {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+                        url("{% static 'images/hero.jpg' %}");
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+
+        .card {
+            width: 450px;
+            border-radius: 15px;
+            padding: 25px;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+    <h3 class="title">Create Account</h3>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <input type="text" name="first_name" class="form-control mb-2" placeholder="First Name" required>
+
+        <input type="text" name="last_name" class="form-control mb-2" placeholder="Last Name" required>
+
+        <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
+
+        <input type="text" name="phone" class="form-control mb-2" placeholder="Phone Number" required>
+
+
+        <!-- ROLE -->
+        <select name="role" class="form-control mb-2" required>
+            <option value="">Select Role</option>
+            <option value="volunteer">Volunteer</option>
+            <option value="leader">Leader</option>
+        </select>
+
+
+        <!-- WARD -->
+        <input type="text" name="ward" class="form-control mb-2" placeholder="Ward" required>
+
+        <!-- POLLING STATION -->
+        <input type="text" name="polling_station" class="form-control mb-2" placeholder="Polling Station" required>
+
+
+        <!-- PROFESSION -->
+        <select name="profession" class="form-control mb-2" id="profession" onchange="toggleOther()" required>
+            <option value="">Select Profession</option>
+            <option value="farmer">Farmer</option>
+            <option value="teacher">Teacher</option>
+            <option value="business">Business</option>
+            <option value="student">Student</option>
+            <option value="other">Other</option>
+        </select>
+
+
+        <input type="text"
+               name="other_profession"
+               id="other_profession"
+               class="form-control mb-2"
+               placeholder="Specify Profession"
+               style="display:none;">
+
+
+        <input type="password" name="password1" class="form-control mb-2" placeholder="Password" required>
+
+        <input type="password" name="password2" class="form-control mb-3" placeholder="Confirm Password" required>
+
+        <button class="btn btn-primary w-100">Register</button>
+
+    </form>
+
+    <p class="text-center mt-3">
+        Already have an account?
+        <a href="/login/">Login</a>
+    </p>
+
+</div>
+
+<script>
+function toggleOther() {
+    let profession = document.getElementById("profession").value;
+    let other = document.getElementById("other_profession");
+
+    if (profession === "other") {
+        other.style.display = "block";
+    } else {
+        other.style.display = "none";
+        other.value = "";
+    }
+}
+</script>
+
+</body>
+</html>

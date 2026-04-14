@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: voluntee
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn voluntee.wsgi:application"

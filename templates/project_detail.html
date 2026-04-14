@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <h2>📌 {{ project.title }}</h2>
+
+    <p class="text-muted">
+        📍 {{ project.location }} | Category: {{ project.category }} | Status: {{ project.status }}
+    </p>
+
+    <hr>
+
+    <!-- DESCRIPTION -->
+    <h4>📝 Description</h4>
+    <p>{{ project.description }}</p>
+
+    <hr>
+
+    <!-- UPDATES SECTION -->
+    <h4>📢 Project Updates</h4>
+
+    {% for u in project.projectupdate_set.all %}
+
+        <div class="card p-3 mb-2 shadow-sm">
+
+            <p>{{ u.message }}</p>
+
+            {% if u.image %}
+                <img src="{{ u.image.url }}" class="img-fluid rounded" style="max-width:300px;">
+            {% endif %}
+
+            <small class="text-muted">{{ u.created_at }}</small>
+
+        </div>
+
+    {% empty %}
+        <p>No updates yet.</p>
+    {% endfor %}
+
+    {% if request.user == project.leader %}
+        <a href="/project/{{ project.id }}/update/" class="btn btn-warning mb-3">
+            ➕ Add Update
+        </a>
+    {% endif %}
+
+    <hr>
+
+    <!-- VOLUNTEERS -->
+    <h4>👥 Volunteers Joined</h4>
+
+    {% for p in participants %}
+
+        <div class="card p-2 mb-1">
+            👤 {{ p.user.first_name }} {{ p.user.last_name }}
+        </div>
+
+    {% empty %}
+        <p>No volunteers yet.</p>
+    {% endfor %}
+
+    <br>
+
+    <!-- JOIN BUTTON -->
+    <a href="/join/{{ project.id }}/" class="btn btn-success">
+        ✅ Join This Project
+    </a>
+
+    <a href="/dashboard/" class="btn btn-secondary">
+        🔙 Back
+    </a>
+
+</div>
+
+{% endblock %}
