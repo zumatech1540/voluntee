@@ -18,9 +18,20 @@ from django.contrib import admin
 from django.urls import path, include
 from accounts import views as account_views
 
+from django.conf import settings
+from django.conf.urls.static import static
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+
     path('', account_views.home_page, name='home'),
+
     path('', include('accounts.urls')),
     path('', include('projects.urls')),
 ]
+
+
+# SERVE STATIC FILES
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

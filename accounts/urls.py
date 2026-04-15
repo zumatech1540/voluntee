@@ -7,4 +7,7 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('volunteers/', views.volunteers_page, name='volunteers'),
+    path('ajax/load-constituencies/', views.load_constituencies),
+    path('ajax/load-wards/', views.load_wards),
+    path('ajax/load-polling/', views.load_polling),
 ]

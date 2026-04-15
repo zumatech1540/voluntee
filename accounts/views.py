@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
-from .models import User
+from django.http import JsonResponse
+
+from .models import User, County, Constituency, Ward, PollingStation
 from projects.models import Project
 
 
@@ -14,6 +16,8 @@ def home_page(request):
 # REGISTER
 def register_view(request):
 
+    counties = County.objects.all()
+
     if request.method == "POST":
 
         first_name = request.POST.get("first_name")
@@ -22,8 +26,11 @@ def register_view(request):
         phone = request.POST.get("phone")
 
         role = request.POST.get("role")
-        ward = request.POST.get("ward")
-        polling_station = request.POST.get("polling_station")
+
+        county_id = request.POST.get("county")
+        constituency_id = request.POST.get("constituency")
+        ward_id = request.POST.get("ward")
+        polling_id = request.POST.get("polling_station")
 
         profession = request.POST.get("profession")
         other_profession = request.POST.get("other_profession")
@@ -34,13 +41,15 @@ def register_view(request):
         # PASSWORD CHECK
         if password1 != password2:
             return render(request, "register.html", {
-                "error": "Passwords do not match"
+                "error": "Passwords do not match",
+                "counties": counties
             })
 
         # USER EXISTS CHECK
         if User.objects.filter(username=email).exists():
             return render(request, "register.html", {
-                "error": "You already registered. Please login."
+                "error": "You already registered. Please login.",
+                "counties": counties
             })
 
         # CREATE USER
@@ -52,8 +61,10 @@ def register_view(request):
             last_name=last_name,
             phone=phone,
             role=role,
-            ward=ward,
-            polling_station=polling_station,
+            county_id=county_id,
+            constituency_id=constituency_id,
+            ward_id=ward_id,
+            polling_station_id=polling_id,
             profession=profession,
             other_profession=other_profession
         )
@@ -61,7 +72,7 @@ def register_view(request):
         login(request, user)
         return redirect('home')
 
-    return render(request, "register.html")
+    return render(request, "register.html", {"counties": counties})
 
 
 # LOGIN
@@ -114,3 +125,32 @@ def volunteers_page(request):
     return render(request, "volunteers.html", {
         "volunteers": volunteers
     })
+
+
+# ================= AJAX LOADERS =================
+
+def load_constituencies(request):
+    county_id = request.GET.get('county')
+    constituencies = Constituency.objects.filter(
+        county_id=county_id
+    ).values('id', 'name')
+
+    return JsonResponse(list(constituencies), safe=False)
+
+
+def load_wards(request):
+    constituency_id = request.GET.get('constituency')
+    wards = Ward.objects.filter(
+        constituency_id=constituency_id
+    ).values('id', 'name')
+
+    return JsonResponse(list(wards), safe=False)
+
+
+def load_polling(request):
+    ward_id = request.GET.get('ward')
+    polling = PollingStation.objects.filter(
+        ward_id=ward_id
+    ).values('id', 'name')
+
+    return JsonResponse(list(polling), safe=False)
