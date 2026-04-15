@@ -45,14 +45,31 @@
 
     <h3 class="title">Login</h3>
 
+    <!-- ERROR MESSAGE -->
+    {% if error %}
+        <div class="alert alert-danger">
+            {{ error }}
+        </div>
+    {% endif %}
+
     <form method="POST">
         {% csrf_token %}
 
-        <input type="email" name="email" class="form-control mb-3" placeholder="Email" required>
+        <input type="email"
+               name="email"
+               class="form-control mb-3"
+               placeholder="Email"
+               required>
 
-        <input type="password" name="password" class="form-control mb-3" placeholder="Password" required>
+        <input type="password"
+               name="password"
+               class="form-control mb-3"
+               placeholder="Password"
+               required>
 
-        <button class="btn btn-success w-100">Login</button>
+        <button class="btn btn-success w-100">
+            Login
+        </button>
 
     </form>
 

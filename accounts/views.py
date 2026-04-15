@@ -31,9 +31,19 @@ def register_view(request):
         password1 = request.POST.get("password1")
         password2 = request.POST.get("password2")
 
+        # PASSWORD CHECK
         if password1 != password2:
-            return render(request, "register.html", {"error": "Passwords do not match"})
+            return render(request, "register.html", {
+                "error": "Passwords do not match"
+            })
 
+        # USER EXISTS CHECK
+        if User.objects.filter(username=email).exists():
+            return render(request, "register.html", {
+                "error": "You already registered. Please login."
+            })
+
+        # CREATE USER
         user = User.objects.create_user(
             username=email,
             email=email,
@@ -58,6 +68,7 @@ def register_view(request):
 def login_view(request):
 
     if request.method == "POST":
+
         email = request.POST.get("email")
         password = request.POST.get("password")
 
@@ -71,7 +82,9 @@ def login_view(request):
             login(request, user)
             return redirect("home")
 
-        return render(request, "login.html", {"error": "Invalid credentials"})
+        return render(request, "login.html", {
+            "error": "Wrong email or password"
+        })
 
     return render(request, "login.html")
 
@@ -88,24 +101,16 @@ def dashboard(request):
 
     projects = Project.objects.all()
 
-    context = {
+    return render(request, "dashboard.html", {
         "projects": projects
-    }
+    })
 
-    return render(request, "dashboard.html", context)
 
-    from .models import User
-
+# VOLUNTEERS PAGE
 def volunteers_page(request):
 
     volunteers = User.objects.filter(role='volunteer')
 
-    context = {
+    return render(request, "volunteers.html", {
         "volunteers": volunteers
-    }
-
-    return render(request, "volunteers.html", context)
-    
-def home_page(request):
-    projects = Project.objects.all().order_by('-id')[:6]
-    return render(request, "home.html", {"projects": projects})
+    })

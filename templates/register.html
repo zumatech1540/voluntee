@@ -46,6 +46,20 @@
 
     <h3 class="title">Create Account</h3>
 
+    <!-- ERROR MESSAGE -->
+    {% if error %}
+        <div class="alert alert-danger">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <!-- SUCCESS MESSAGE -->
+    {% if success %}
+        <div class="alert alert-success">
+            {{ success }}
+        </div>
+    {% endif %}
+
     <form method="POST">
         {% csrf_token %}
 
@@ -96,7 +110,9 @@
 
         <input type="password" name="password2" class="form-control mb-3" placeholder="Confirm Password" required>
 
-        <button class="btn btn-primary w-100">Register</button>
+        <button class="btn btn-primary w-100">
+            Register
+        </button>
 
     </form>
 
