@@ -3,8 +3,17 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from .models import User, County, Constituency, Ward, PollingStation
+from .models import User
 from projects.models import Project
+
+# try import location models safely
+try:
+    from .models import County, Constituency, Ward, PollingStation
+except:
+    County = None
+    Constituency = None
+    Ward = None
+    PollingStation = None
 
 
 # HOME PAGE
@@ -16,7 +25,7 @@ def home_page(request):
 # REGISTER
 def register_view(request):
 
-    counties = County.objects.all()
+    counties = County.objects.all() if County else []
 
     if request.method == "POST":
 
@@ -24,7 +33,6 @@ def register_view(request):
         last_name = request.POST.get("last_name")
         email = request.POST.get("email")
         phone = request.POST.get("phone")
-
         role = request.POST.get("role")
 
         county_id = request.POST.get("county")
@@ -38,21 +46,20 @@ def register_view(request):
         password1 = request.POST.get("password1")
         password2 = request.POST.get("password2")
 
-        # PASSWORD CHECK
+        # password check
         if password1 != password2:
             return render(request, "register.html", {
                 "error": "Passwords do not match",
                 "counties": counties
             })
 
-        # USER EXISTS CHECK
+        # already exists
         if User.objects.filter(username=email).exists():
             return render(request, "register.html", {
                 "error": "You already registered. Please login.",
                 "counties": counties
             })
 
-        # CREATE USER
         user = User.objects.create_user(
             username=email,
             email=email,
@@ -61,10 +68,6 @@ def register_view(request):
             last_name=last_name,
             phone=phone,
             role=role,
-            county_id=county_id,
-            constituency_id=constituency_id,
-            ward_id=ward_id,
-            polling_station_id=polling_id,
             profession=profession,
             other_profession=other_profession
         )
@@ -117,7 +120,7 @@ def dashboard(request):
     })
 
 
-# VOLUNTEERS PAGE
+# VOLUNTEERS
 def volunteers_page(request):
 
     volunteers = User.objects.filter(role='volunteer')
@@ -127,30 +130,39 @@ def volunteers_page(request):
     })
 
 
-# ================= AJAX LOADERS =================
+# AJAX LOADERS (safe)
 
 def load_constituencies(request):
+    if not Constituency:
+        return JsonResponse([], safe=False)
+
     county_id = request.GET.get('county')
-    constituencies = Constituency.objects.filter(
+    data = Constituency.objects.filter(
         county_id=county_id
     ).values('id', 'name')
 
-    return JsonResponse(list(constituencies), safe=False)
+    return JsonResponse(list(data), safe=False)
 
 
 def load_wards(request):
+    if not Ward:
+        return JsonResponse([], safe=False)
+
     constituency_id = request.GET.get('constituency')
-    wards = Ward.objects.filter(
+    data = Ward.objects.filter(
         constituency_id=constituency_id
     ).values('id', 'name')
 
-    return JsonResponse(list(wards), safe=False)
+    return JsonResponse(list(data), safe=False)
 
 
 def load_polling(request):
+    if not PollingStation:
+        return JsonResponse([], safe=False)
+
     ward_id = request.GET.get('ward')
-    polling = PollingStation.objects.filter(
+    data = PollingStation.objects.filter(
         ward_id=ward_id
     ).values('id', 'name')
 
-    return JsonResponse(list(polling), safe=False)
+    return JsonResponse(list(data), safe=False)
