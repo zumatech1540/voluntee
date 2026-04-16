@@ -1,31 +1,19 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
 
 from .models import User
 from projects.models import Project
 
-# try import location models safely
-try:
-    from .models import County, Constituency, Ward, PollingStation
-except:
-    County = None
-    Constituency = None
-    Ward = None
-    PollingStation = None
 
-
-# HOME PAGE
+# ================= HOME =================
 def home_page(request):
     projects = Project.objects.all().order_by('-id')[:6]
     return render(request, "home.html", {"projects": projects})
 
 
-# REGISTER
+# ================= REGISTER =================
 def register_view(request):
-
-    counties = County.objects.all() if County else []
 
     if request.method == "POST":
 
@@ -33,12 +21,10 @@ def register_view(request):
         last_name = request.POST.get("last_name")
         email = request.POST.get("email")
         phone = request.POST.get("phone")
-        role = request.POST.get("role")
 
-        county_id = request.POST.get("county")
-        constituency_id = request.POST.get("constituency")
-        ward_id = request.POST.get("ward")
-        polling_id = request.POST.get("polling_station")
+        role = request.POST.get("role")
+        ward = request.POST.get("ward")
+        polling_station = request.POST.get("polling_station")
 
         profession = request.POST.get("profession")
         other_profession = request.POST.get("other_profession")
@@ -49,17 +35,16 @@ def register_view(request):
         # password check
         if password1 != password2:
             return render(request, "register.html", {
-                "error": "Passwords do not match",
-                "counties": counties
+                "error": "Passwords do not match"
             })
 
-        # already exists
+        # already registered
         if User.objects.filter(username=email).exists():
             return render(request, "register.html", {
-                "error": "You already registered. Please login.",
-                "counties": counties
+                "error": "You already registered. Please login."
             })
 
+        # create user
         user = User.objects.create_user(
             username=email,
             email=email,
@@ -68,17 +53,19 @@ def register_view(request):
             last_name=last_name,
             phone=phone,
             role=role,
+            ward=ward,
+            polling_station=polling_station,
             profession=profession,
             other_profession=other_profession
         )
 
         login(request, user)
-        return redirect('home')
+        return redirect("home")
 
-    return render(request, "register.html", {"counties": counties})
+    return render(request, "register.html")
 
 
-# LOGIN
+# ================= LOGIN =================
 def login_view(request):
 
     if request.method == "POST":
@@ -103,13 +90,13 @@ def login_view(request):
     return render(request, "login.html")
 
 
-# LOGOUT
+# ================= LOGOUT =================
 def logout_view(request):
     logout(request)
     return redirect("login")
 
 
-# DASHBOARD
+# ================= DASHBOARD =================
 @login_required
 def dashboard(request):
 
@@ -120,7 +107,7 @@ def dashboard(request):
     })
 
 
-# VOLUNTEERS
+# ================= VOLUNTEERS =================
 def volunteers_page(request):
 
     volunteers = User.objects.filter(role='volunteer')
@@ -128,41 +115,3 @@ def volunteers_page(request):
     return render(request, "volunteers.html", {
         "volunteers": volunteers
     })
-
-
-# AJAX LOADERS (safe)
-
-def load_constituencies(request):
-    if not Constituency:
-        return JsonResponse([], safe=False)
-
-    county_id = request.GET.get('county')
-    data = Constituency.objects.filter(
-        county_id=county_id
-    ).values('id', 'name')
-
-    return JsonResponse(list(data), safe=False)
-
-
-def load_wards(request):
-    if not Ward:
-        return JsonResponse([], safe=False)
-
-    constituency_id = request.GET.get('constituency')
-    data = Ward.objects.filter(
-        constituency_id=constituency_id
-    ).values('id', 'name')
-
-    return JsonResponse(list(data), safe=False)
-
-
-def load_polling(request):
-    if not PollingStation:
-        return JsonResponse([], safe=False)
-
-    ward_id = request.GET.get('ward')
-    data = PollingStation.objects.filter(
-        ward_id=ward_id
-    ).values('id', 'name')
-
-    return JsonResponse(list(data), safe=False)
