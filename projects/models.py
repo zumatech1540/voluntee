@@ -19,7 +19,13 @@ class Project(models.Model):
     description = models.TextField()
     location = models.CharField(max_length=255)
     category = models.CharField(max_length=100)
-    leader = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    leader = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="projects_led"
+    )
+
     status = models.CharField(max_length=20, choices=STATUS, default='planned')
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -28,7 +34,7 @@ class Project(models.Model):
 
 
 # =========================
-# PROJECT UPDATES (TIMELINE)
+# PROJECT UPDATES
 # =========================
 class ProjectUpdate(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)

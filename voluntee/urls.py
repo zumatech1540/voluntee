@@ -25,13 +25,18 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
 
+    # HOME PAGE ONLY ON ROOT
     path('', account_views.home_page, name='home'),
 
-    path('', include('accounts.urls')),
-    path('', include('projects.urls')),
+    # ACCOUNTS (login, register, dashboard)
+    path('accounts/', include('accounts.urls')),
+
+    # PROJECTS APP
+    path('projects/', include('projects.urls')),
+    
 ]
 
 
-# SERVE STATIC FILES
+# STATIC FILES
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

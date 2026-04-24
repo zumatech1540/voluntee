@@ -6,8 +6,16 @@
 
     <h2 class="mb-3">📊 Dashboard</h2>
 
-    {% if request.user.role == 'leader' %}
-        <a href="/create-project/" class="btn btn-success mb-3">
+    <!-- DOWNLOAD BUTTON -->
+   {% if request.user.role == 'leader' or request.user.is_staff %}
+<a href="{% url 'download_users_excel' %}" class="btn btn-success mb-3">
+    ⬇ Download Users (Excel)
+</a>
+{% endif %}
+
+    <!-- CREATE PROJECT (LEADER ONLY) -->
+    {% if request.user.is_authenticated and request.user.role == 'leader' %}
+        <a href="/create-project/" class="btn btn-primary mb-3">
             ➕ Create Project
         </a>
     {% endif %}
@@ -26,7 +34,8 @@
 
                 <p>{{ project.description|slice:":80" }}...</p>
 
-                <a href="/project/{{ project.id }}/" class="btn btn-primary btn-sm w-100">
+                <a href="/project/{{ project.id }}/"
+                   class="btn btn-primary btn-sm w-100">
                     Open Project
                 </a>
 
@@ -36,7 +45,7 @@
 
         {% empty %}
 
-        <p>No projects available.</p>
+        <p>6 projects available.</p>
 
         {% endfor %}
 

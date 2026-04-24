@@ -3,7 +3,7 @@
 
 {% block content %}
 
-<!-- HERO -->
+<!-- HERO SECTION -->
 <div class="hero-bg">
 
     <h1 style="font-size:48px; font-weight:700;">
@@ -34,11 +34,9 @@
     <div class="row align-items-center g-4">
 
         <div class="col-md-6">
-
             <img src="{% static 'images/about.jpg' %}"
                  class="img-fluid rounded shadow"
                  style="border-radius: 15px;">
-
         </div>
 
         <div class="col-md-6">
@@ -67,100 +65,79 @@
 
 <br>
 
-<!-- PROJECTS -->
-<div class="container my-5">
-
-    <h2 class="text-center mb-4">Recent Projects</h2>
-
-    <div class="row g-3">
-
-        {% for project in projects %}
-
-        <div class="col-md-4 col-sm-6">
-
-            <div class="card p-3 shadow-sm h-100">
-
-                <h5>📌 {{ project.title }}</h5>
-
-                <p class="text-muted">
-                    {{ project.description|slice:":120" }}...
-                </p>
-
-                <a href="/project/{{ project.id }}/"
-                   class="btn btn-primary mt-auto w-100">
-                    View Project
-                </a>
-
-            </div>
-
-        </div>
-
-        {% empty %}
-
-        <p class="text-center">No projects available yet.</p>
-
-        {% endfor %}
-
-    </div>
-
-</div>
-
-<br>
+<!-- PROJECTS SECTION (CONTAINER STYLE DESIGN) --> <div class="container my-5">
+     <h2 class="text-center mb-5 fw-bold">Our Community Projects</h2> 
+     <div class="row g-4"> 
+        <!-- PROJECT 1 -->
+          <div class="col-lg-4 col-md-6" data-aos="fade-up">
+             <div class="project-container"> <div class="project-img"> 
+                <img src="{% static 'images/tree.jpg' %}"> </div>
+                 <div class="project-content"> <span class="status completed">Completed</span>
+                     <h5>🌳 Tree Planting Initiative</h5> <p>Large-scale environmental restoration through tree planting campaigns across communities.</p> </div> </div> </div> <!-- PROJECT 2 --> <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100"> <div class="project-container"> <div class="project-img"> <img src="{% static 'images/cleanup.jpg' %}"> </div> <div class="project-content"> <span class="status completed">Completed</span> <h5>🧹 Community Clean-up</h5> <p>Organized clean-up drives improving hygiene and environmental safety in neighborhoods.</p> </div> </div> </div> <!-- PROJECT 3 --> <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200"> <div class="project-container"> <div class="project-img"> <img src="{% static 'images/education.jpg' %}"> </div> <div class="project-content"> <span class="status completed">Completed</span> <h5>📚 Educational Support Program</h5> <p>Providing learning materials, mentorship, and academic support to students in need.</p> </div> </div> </div> <!-- PROJECT 4 --> <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300"> <div class="project-container"> <div class="project-img"> <img src="{% static 'images/water.jpg' %}"> </div> <div class="project-content"> <span class="status completed">Completed</span> <h5>💧 Clean Water Access</h5> <p>Supplying safe drinking water solutions to rural and underserved communities.</p> </div> </div> </div> <!-- PROJECT 5 --> <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400"> <div class="project-container"> <div class="project-img"> <img src="{% static 'images/community.jpg' %}"> </div> <div class="project-content"> <span class="status ongoing">Ongoing</span> <h5>🏢 Community Center Construction</h5> <p>Building a modern facility for training, meetings, and community development programs.</p> </div> </div> </div> <!-- PROJECT 6 --> <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500"> <div class="project-container"> <div class="project-img"> <img src="{% static 'images/solar.jpg' %}"> </div>
+  <div class="project-content"> <span class="status completed">Completed</span> <h5>☀ Solar Energy Project</h5> <p>Promoting clean renewable energy by installing solar systems in communities.</p> </div> </div> </div> </div> </div>
 
 <!-- IMPACT SECTION -->
-<div class="container text-center my-5">
+<div class="container my-5">
 
-    <h2 class="mb-4">Our Impact</h2>
+    <h2 class="text-center mb-5 fw-bold">Our Impact in Communities</h2>
 
-    <div class="row g-3">
+    <div class="row g-4 text-center">
 
         <div class="col-md-4">
-            <div class="card p-4 shadow-sm">
-                <h3>🌍 Communities</h3>
-                <p>Building stronger and cleaner communities</p>
+            <div class="impact-card bg-community">
+                <div class="impact-icon">🌍</div>
+                <h1>25+</h1>
+                <h5>Communities Reached</h5>
+                <p>We are actively working across Laikipia and beyond.</p>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card p-4 shadow-sm">
-                <h3>👥 Volunteers</h3>
-                <p>Connecting people to meaningful opportunities</p>
+            <div class="impact-card bg-volunteers">
+                <div class="impact-icon">👥</div>
+                <h1>500+</h1>
+                <h5>Active Volunteers</h5>
+                <p>People joining hands for real community change.</p>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card p-4 shadow-sm">
-                <h3>📊 Projects</h3>
-                <p>Driving real-world impact initiatives</p>
+            <div class="impact-card bg-projects">
+                <div class="impact-icon">📊</div>
+                <h1>10+</h1>
+                <h5>Projects Completed</h5>
+                <p>Successful initiatives improving lives daily.</p>
             </div>
         </div>
 
     </div>
-
 </div>
 
-<br>
-
-<!-- CALL TO ACTION -->
+<!-- CALL TO ACTION (WHATSAPP) -->
 <div class="container my-5">
 
-    <div class="card p-5 text-center shadow-lg">
+    <div class="cta-card text-center" data-aos="fade-up">
 
-        <h2>Join the Movement</h2>
+        <div class="cta-icon">📱</div>
+
+        <h2>Join Our WhatsApp Community</h2>
 
         <p class="mt-2">
-            Be part of a growing community creating real change.
+            Get real-time updates on volunteer opportunities and community projects in Laikipia County.
         </p>
 
-        {% if not request.user.is_authenticated %}
-            <a href="/register/" class="btn btn-success btn-lg mt-3">
-                Get Started
-            </a>
-        {% else %}
-            <a href="/dashboard/" class="btn btn-primary btn-lg mt-3">
-                Go to Dashboard
-            </a>
-        {% endif %}
+        <!-- IMPORTANT: replace link -->
+        <a href="https://chat.whatsapp.com/YOUR_REAL_GROUP_LINK"
+           target="_blank"
+           class="btn btn-success btn-lg mt-3 px-4">
+
+            Join WhatsApp Group
+
+        </a>
+
+        <p class="small text-muted mt-3">
+            Stay connected. Be part of the change.
+        </p>
 
     </div>
 
