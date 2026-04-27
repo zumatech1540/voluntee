@@ -14,7 +14,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY
 SECRET_KEY = 'django-insecure-7yitp^5gu-c1&u(f=m55ju(we(z!l42eox)1pjz1(^2y0g0%k7'
 
-DEBUG = True
+
+DEBUG = False
+
+SECURE_SSL_REDIRECT = True
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
