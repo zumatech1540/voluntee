@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container my-4">
+
+    <h2 class="mb-3">🌍 Smart Volunteer Map</h2>
+
+    <!-- FILTER BAR -->
+    <div class="row mb-3">
+
+        <div class="col-md-4">
+            <select id="filterStation" class="form-select">
+                <option value="all">All Polling Stations</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <input type="text" id="searchBox" class="form-control"
+                   placeholder="Search volunteer name...">
+        </div>
+
+    </div>
+
+    <div id="map" style="height: 650px; border-radius: 12px;"></div>
+
+</div>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Heatmap -->
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+<script>
+
+let map = L.map('map').setView([-0.3609, 36.6409], 9);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18
+}).addTo(map);
+
+let markers = [];
+let heatData = [];
+let allVolunteers = [];
+
+// ================= LOAD DATA =================
+fetch("/accounts/api/volunteer-map/")
+.then(res => res.json())
+.then(data => {
+
+    data.forEach(station => {
+
+        if (station.lat && station.lng) {
+
+            // store volunteers for search
+            allVolunteers.push(...station.volunteers.map(v => ({
+                name: v.name.toLowerCase(),
+                station: station.name
+            })));
+
+            // 🔵 MARKER
+            let marker = L.marker([station.lat, station.lng]).addTo(map);
+
+            // CLEAN POPUP (NO PHONE NUMBERS)
+            let popupHTML = `
+                <div style="min-width:200px">
+                    <h6>📍 ${station.name}</h6>
+                    <p><b>👥 Volunteers:</b> ${station.count}</p>
+                    <hr>
+                    <div style="max-height:120px; overflow:auto;">
+                        ${station.volunteers.length > 0
+                            ? station.volunteers.map(v => `👤 ${v.name}`).join("<br>")
+                            : "<i>No volunteers</i>"
+                        }
+                    </div>
+                </div>
+            `;
+
+            marker.bindPopup(popupHTML);
+
+            markers.push({
+                marker: marker,
+                name: station.name.toLowerCase()
+            });
+
+            // 🔥 HEATMAP
+            heatData.push([station.lat, station.lng, station.count]);
+
+            // FILTER DROPDOWN
+            let option = document.createElement("option");
+            option.value = station.name;
+            option.text = station.name;
+            document.getElementById("filterStation").appendChild(option);
+        }
+    });
+
+    // HEATMAP LAYER
+    L.heatLayer(heatData, {
+        radius: 25,
+        blur: 15,
+        maxZoom: 12
+    }).addTo(map);
+
+});
+
+
+// ================= FILTER BY STATION =================
+document.getElementById("filterStation").addEventListener("change", function () {
+
+    let value = this.value;
+
+    markers.forEach(m => {
+
+        if (value === "all" || m.name.includes(value.toLowerCase())) {
+            map.addLayer(m.marker);
+        } else {
+            map.removeLayer(m.marker);
+        }
+
+    });
+
+});
+
+
+// ================= SEARCH VOLUNTEERS =================
+document.getElementById("searchBox").addEventListener("input", function () {
+
+    let query = this.value.toLowerCase();
+
+    markers.forEach(m => {
+
+        let match = allVolunteers.some(v => v.name.includes(query));
+
+        if (query === "" || match) {
+            map.addLayer(m.marker);
+        } else {
+            map.removeLayer(m.marker);
+        }
+
+    });
+
+});
+
+</script>
+
+{% endblock %}

@@ -1,14 +1,13 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>Register - Voluntee</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
-
         body {
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
                         url("{% static 'images/hero.jpg' %}");
@@ -18,26 +17,23 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Segoe UI', sans-serif;
-            padding: 20px;
+            font-family: Arial;
         }
 
         .card {
             width: 450px;
-            border-radius: 15px;
             padding: 25px;
-            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            background: white;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
         .title {
             text-align: center;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
-
     </style>
-
 </head>
 
 <body>
@@ -46,31 +42,17 @@
 
     <h3 class="title">Create Account</h3>
 
-    <!-- ERROR MESSAGE -->
     {% if error %}
-        <div class="alert alert-danger">
-            {{ error }}
-        </div>
-    {% endif %}
-
-    <!-- SUCCESS MESSAGE -->
-    {% if success %}
-        <div class="alert alert-success">
-            {{ success }}
-        </div>
+        <div class="alert alert-danger">{{ error }}</div>
     {% endif %}
 
     <form method="POST">
         {% csrf_token %}
 
         <input type="text" name="first_name" class="form-control mb-2" placeholder="First Name" required>
-
         <input type="text" name="last_name" class="form-control mb-2" placeholder="Last Name" required>
-
         <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
-
         <input type="text" name="phone" class="form-control mb-2" placeholder="Phone Number" required>
-
 
         <!-- ROLE -->
         <select name="role" class="form-control mb-2" required>
@@ -79,16 +61,26 @@
             <option value="leader">Leader</option>
         </select>
 
+        <!-- CONSTITUENCY -->
+        <select name="constituency" id="constituency" class="form-control mb-2" required>
+            <option value="">Select Constituency</option>
+            {% for c in constituencies %}
+                <option value="{{ c.id }}">{{ c.name }}</option>
+            {% endfor %}
+        </select>
 
         <!-- WARD -->
-        <input type="text" name="ward" class="form-control mb-2" placeholder="Ward" required>
+        <select name="ward" id="ward" class="form-control mb-2" required disabled>
+            <option value="">Select Ward</option>
+        </select>
 
         <!-- POLLING STATION -->
-        <input type="text" name="polling_station" class="form-control mb-2" placeholder="Polling Station" required>
-
+        <select name="polling_station" id="polling" class="form-control mb-2" required disabled>
+            <option value="">Select Polling Station</option>
+        </select>
 
         <!-- PROFESSION -->
-        <select name="profession" class="form-control mb-2" id="profession" onchange="toggleOther()" required>
+        <select name="profession" id="profession" class="form-control mb-2" required>
             <option value="">Select Profession</option>
             <option value="farmer">Farmer</option>
             <option value="teacher">Teacher</option>
@@ -97,7 +89,6 @@
             <option value="other">Other</option>
         </select>
 
-
         <input type="text"
                name="other_profession"
                id="other_profession"
@@ -105,36 +96,100 @@
                placeholder="Specify Profession"
                style="display:none;">
 
-
         <input type="password" name="password1" class="form-control mb-2" placeholder="Password" required>
-
         <input type="password" name="password2" class="form-control mb-3" placeholder="Confirm Password" required>
 
-        <button class="btn btn-primary w-100">
-            Register
-        </button>
-
+        <button class="btn btn-primary w-100">Register</button>
     </form>
 
     <p class="text-center mt-3">
         Already have an account?
-        <a href="/login/">Login</a>
+        <a href="/accounts/login/">Login</a>
     </p>
 
 </div>
 
 <script>
-function toggleOther() {
-    let profession = document.getElementById("profession").value;
-    let other = document.getElementById("other_profession");
+$(document).ready(function () {
 
-    if (profession === "other") {
-        other.style.display = "block";
-    } else {
-        other.style.display = "none";
-        other.value = "";
-    }
-}
+    // PROFESSION
+    $("#profession").change(function () {
+        if ($(this).val() === "other") {
+            $("#other_profession").show();
+        } else {
+            $("#other_profession").hide().val("");
+        }
+    });
+
+    // ================= CONSTITUENCY → WARD =================
+    $("#constituency").change(function () {
+
+        let constituencyId = $(this).val();
+
+        $("#ward").prop("disabled", true);
+        $("#polling").prop("disabled", true);
+
+        $("#ward").html('<option value="">Loading...</option>');
+        $("#polling").html('<option value="">Select Polling Station</option>');
+
+        $.ajax({
+            url: "/accounts/ajax/load-wards/",
+            data: {
+                constituency: constituencyId
+            },
+            success: function (data) {
+
+                $("#ward").html('<option value="">Select Ward</option>');
+
+                data.forEach(function (item) {
+                    $("#ward").append(
+                        `<option value="${item.id}">${item.name}</option>`
+                    );
+                });
+
+                $("#ward").prop("disabled", false);
+            },
+            error: function () {
+                alert("Error loading wards");
+            }
+        });
+
+    });
+
+
+    // ================= WARD → POLLING =================
+    $("#ward").change(function () {
+
+        let wardId = $(this).val();
+
+        $("#polling").prop("disabled", true);
+        $("#polling").html('<option value="">Loading...</option>');
+
+        $.ajax({
+            url: "/accounts/ajax/load-polling/",
+            data: {
+                ward: wardId
+            },
+            success: function (data) {
+
+                $("#polling").html('<option value="">Select Polling Station</option>');
+
+                data.forEach(function (item) {
+                    $("#polling").append(
+                        `<option value="${item.id}">${item.name}</option>`
+                    );
+                });
+
+                $("#polling").prop("disabled", false);
+            },
+            error: function () {
+                alert("Error loading polling stations");
+            }
+        });
+
+    });
+
+});
 </script>
 
 </body>

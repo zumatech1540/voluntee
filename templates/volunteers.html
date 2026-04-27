@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container-fluid my-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>🌍 Volunteer Operations Dashboard</h3>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="row">
+
+        <!-- LEFT: DIRECTORY -->
+        <div class="col-md-4">
+
+            <div class="card shadow-sm p-3" style="height: 700px; overflow-y:auto;">
+
+                <h5 class="mb-3">👥 Volunteer Directory</h5>
+
+                {% for v in volunteers %}
+
+                <div class="border rounded p-2 mb-2">
+
+                    <b>{{ v.first_name }} {{ v.last_name }}</b><br>
+
+                    <small>💼 {{ v.profession }}</small><br>
+
+                    <small>📍 {{ v.ward }}</small>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT: MAP -->
+        <div class="col-md-8">
+
+            <div class="card shadow-sm p-3">
+
+                <h5 class="mb-2">🗺️ Laikipia Volunteer Map</h5>
+
+                <div id="map" style="height: 700px; border-radius: 12px;"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- LEAFLET -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+<script>
+
+let map = L.map('map', {
+    center: [-0.3609, 36.6409],
+    zoom: 9,
+    minZoom: 8,
+    maxZoom: 12,
+    maxBounds: [
+        [-0.9, 36.0],   // southwest (rough Laikipia boundary)
+        [0.3, 37.3]     // northeast
+    ]
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 18,
+    attribution: '&copy; OpenStreetMap & CartoDB'
+}).addTo(map);
+
+let heatData = [];
+
+// LOAD DATA FROM API
+fetch("/accounts/api/volunteer-map/")
+.then(res => res.json())
+.then(data => {
+
+    data.forEach(station => {
+
+        if (station.lat && station.lng) {
+
+            let marker = L.marker([station.lat, station.lng]).addTo(map);
+
+            marker.bindPopup(`
+                <h6>📍 ${station.name}</h6>
+                <b>👥 ${station.count} Volunteers</b>
+                <hr>
+                ${station.volunteers.map(v => `👤 ${v.name}`).join("<br>")}
+            `);
+
+            heatData.push([station.lat, station.lng, station.count]);
+        }
+    });
+
+    // HEATMAP
+    L.heatLayer(heatData, {
+        radius: 25,
+        blur: 15,
+        maxZoom: 12
+    }).addTo(map);
+
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container my-5">
+
+<h3>Edit Event</h3>
+
+<form method="POST" enctype="multipart/form-data">
+{% csrf_token %}
+
+<input name="title" class="form-control mb-2" value="{{ event.title }}">
+
+<textarea name="description" class="form-control mb-2">{{ event.description }}</textarea>
+
+<input name="location" class="form-control mb-2" value="{{ event.location }}">
+
+<input type="date" name="date" value="{{ event.date|date:'Y-m-d' }}" class="form-control mb-2">
+
+<input type="file" name="image" class="form-control mb-2">
+
+<button class="btn btn-primary">Update Event</button>
+
+</form>
+
+</div>
+
+{% endblock %}

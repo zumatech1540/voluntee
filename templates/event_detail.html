@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container my-5">
+
+<div class="row">
+
+<div class="col-md-8">
+
+<div class="card shadow-sm">
+
+{% if event.image %}
+<img src="{{ event.image.url }}" class="card-img-top">
+{% endif %}
+
+<div class="card-body">
+
+<h3>{{ event.title }}</h3>
+
+<p class="text-muted">
+📍 {{ event.location }}
+</p>
+
+<p class="text-muted">
+📅 {{ event.date }}
+</p>
+
+<hr>
+
+<p>
+{{ event.description }}
+</p>
+
+<hr>
+
+<p class="fw-bold">
+👥 {{ event.attendees.count }} people joined
+</p>
+
+{% if event.get_status != "closed" %}
+
+    {% if joined %}
+        <a href="{% url 'leave_event' event.id %}" class="btn btn-danger">
+            Leave Event
+        </a>
+    {% else %}
+        <a href="{% url 'join_event' event.id %}" class="btn btn-success">
+            Join Event
+        </a>
+    {% endif %}
+
+{% else %}
+
+<button class="btn btn-secondary" disabled>
+    Event Closed
+</button>
+
+{% endif %}
+
+</div>
+</div>
+
+</div>
+
+<!-- ATTENDEES -->
+<div class="col-md-4">
+
+<div class="card shadow-sm">
+
+<div class="card-body">
+
+<h5>👥 Attendees</h5>
+
+<hr>
+
+{% for user in event.attendees.all %}
+
+<div class="mb-2">
+<strong>{{ user.first_name }} {{ user.last_name }}</strong>
+<br>
+<small class="text-muted">
+{{ user.phone }}
+</small>
+</div>
+
+{% empty %}
+
+<p>No attendees yet</p>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="mb-3">
+
+<a href="{% url 'export_attendees' event.id %}"
+   class="btn btn-success btn-sm">
+Export Excel
+</a>
+
+<a href="{% url 'whatsapp_attendees' event.id %}"
+   class="btn btn-success btn-sm">
+WhatsApp Attendees
+</a>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container my-5">
+
+<h2 class="text-center mb-4">Contact Us</h2>
+
+<div class="row justify-content-center">
+
+<div class="col-md-6">
+
+<form>
+
+<input type="text"
+       class="form-control mb-3"
+       placeholder="Your Name">
+
+<input type="email"
+       class="form-control mb-3"
+       placeholder="Email">
+
+<input type="text"
+       class="form-control mb-3"
+       placeholder="Subject">
+
+<textarea class="form-control mb-3"
+          rows="5"
+          placeholder="Message"></textarea>
+
+<button class="btn btn-primary w-100">
+Send Message
+</button>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

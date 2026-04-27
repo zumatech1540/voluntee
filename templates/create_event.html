@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container my-5" style="max-width:700px;">
+
+    <div class="card shadow-sm p-4">
+
+        <h3 class="mb-3">➕ Create Community Event</h3>
+
+        {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- TITLE -->
+            <label class="form-label">Event Title</label>
+            <input type="text" name="title" class="form-control mb-3" required>
+
+            <!-- DESCRIPTION -->
+            <label class="form-label">Event Description</label>
+            <textarea name="description" rows="4" class="form-control mb-3" required></textarea>
+
+            <!-- LOCATION -->
+            <label class="form-label">Location</label>
+            <input type="text" name="location" class="form-control mb-3" required>
+
+            <!-- DATE -->
+            <label class="form-label">Event Date</label>
+            <input type="date" name="date" class="form-control mb-3" required>
+
+            <!-- IMAGE -->
+            <label class="form-label">Event Image</label>
+            <input type="file" name="image" class="form-control mb-3" id="imageInput">
+
+            <!-- IMAGE PREVIEW -->
+            <img id="preview"
+                 style="width:100%; display:none; margin-bottom:15px; border-radius:8px;"/>
+
+            <!-- BUTTONS -->
+            <div class="d-flex gap-2">
+                <button class="btn btn-success w-100">
+                    Create Event
+                </button>
+
+                <a href="{% url 'events' %}" class="btn btn-secondary w-100">
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+document.getElementById("imageInput").onchange = function(evt){
+    const [file] = this.files;
+    if(file){
+        let preview = document.getElementById("preview");
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+    }
+}
+</script>
+
+{% endblock %}

@@ -1,6 +1,10 @@
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
+
+# ================= LOCATION MODELS =================
 
 class County(models.Model):
     name = models.CharField(max_length=100)
@@ -33,12 +37,13 @@ class PollingStation(models.Model):
         return f"{self.name} ({self.ward.name})"
 
 
+# ================= USER MODEL =================
+
 class User(AbstractUser):
 
     ROLE_CHOICES = (
         ('volunteer', 'Volunteer'),
         ('leader', 'Leader'),
-        ('superuser', 'Superuser'),
     )
 
     PROFESSION_CHOICES = (
@@ -61,4 +66,66 @@ class User(AbstractUser):
     other_profession = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        name = f"{self.first_name} {self.last_name}".strip()
+        return name if name else self.username
+
+
+# ================= EVENT MODEL =================
+
+class Event(models.Model):
+
+    APPROVAL_STATUS = (
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    )
+
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    location = models.CharField(max_length=200)
+    date = models.DateField()
+
+    image = models.ImageField(upload_to='events/', blank=True, null=True)
+
+    approval_status = models.CharField(
+        max_length=20,
+        choices=APPROVAL_STATUS,
+        default='pending'
+    )
+
+    created_by = models.ForeignKey(
+    settings.AUTH_USER_MODEL,
+    on_delete=models.CASCADE,
+    related_name="created_events"
+
+    )
+
+    attendees = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name="joined_events"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_closed(self):
+        return self.date < timezone.now().date()
+
+    def __str__(self):
+        return self.title
+# ================= NOTIFICATIONS =================
+
+class Notification(models.Model):
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications"
+    )
+
+    message = models.CharField(max_length=255)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.message

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container my-5">
+
+<h2 class="text-center mb-4">Gallery</h2>
+
+<div class="row g-4">
+
+<div class="col-md-4">
+<img src="{% static 'images/tree.jpg' %}" class="img-fluid rounded shadow">
+</div>
+
+<div class="col-md-4">
+<img src="{% static 'images/cleanup.jpg' %}" class="img-fluid rounded shadow">
+</div>
+
+<div class="col-md-4">
+<img src="{% static 'images/education.jpg' %}" class="img-fluid rounded shadow">
+</div>
+
+<div class="col-md-4">
+<img src="{% static 'images/water.jpg' %}" class="img-fluid rounded shadow">
+</div>
+
+<div class="col-md-4">
+<img src="{% static 'images/community.jpg' %}" class="img-fluid rounded shadow">
+</div>
+
+<div class="col-md-4">
+<img src="{% static 'images/solar.jpg' %}" class="img-fluid rounded shadow">
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

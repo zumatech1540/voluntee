@@ -4,50 +4,121 @@
 
 <div class="container-fluid">
 
-    <h2 class="mb-3">📊 Dashboard</h2>
+    <h2 class="mb-3">📊 Leader Dashboard</h2>
+
+    <!-- NOTIFICATIONS -->
+    <div class="alert alert-info">
+        <strong>🔔 Notifications:</strong>
+        <ul class="mb-0">
+            {% for note in notifications %}
+                <li>{{ note }}</li>
+            {% endfor %}
+        </ul>
+    </div>
 
     <!-- DOWNLOAD BUTTON -->
-   {% if request.user.role == 'leader' or request.user.is_staff %}
-<a href="{% url 'download_users_excel' %}" class="btn btn-success mb-3">
-    ⬇ Download Users (Excel)
-</a>
-{% endif %}
-
-    <!-- CREATE PROJECT (LEADER ONLY) -->
-    {% if request.user.is_authenticated and request.user.role == 'leader' %}
-        <a href="/create-project/" class="btn btn-primary mb-3">
-            ➕ Create Project
-        </a>
-    {% endif %}
+    <a href="{% url 'download_users_excel' %}" class="btn btn-success mb-3">
+        ⬇ Download Users (Excel)
+    </a>
 
     <div class="row">
 
-        {% for project in projects %}
-
+        <!-- EVENTS SECTION -->
         <div class="col-md-4">
 
-            <div class="card p-3 mb-3 shadow-sm">
+            <div class="card p-3 shadow-sm mb-3">
 
-                <h5>{{ project.title }}</h5>
+                <h5>📅 Create Event</h5>
 
-                <p class="text-muted">{{ project.location }}</p>
+                <form method="POST" action="{% url 'create_event' %}">
+                    {% csrf_token %}
 
-                <p>{{ project.description|slice:":80" }}...</p>
+                    <input type="text" name="title" class="form-control mb-2" placeholder="Event Title">
 
-                <a href="/project/{{ project.id }}/"
-                   class="btn btn-primary btn-sm w-100">
-                    Open Project
-                </a>
+                    <textarea name="description" class="form-control mb-2" placeholder="Description"></textarea>
+
+                    <input type="text" name="location" class="form-control mb-2" placeholder="Location">
+
+                    <input type="date" name="date" class="form-control mb-2">
+
+                    <button class="btn btn-primary w-100">
+                        Create Event
+                    </button>
+                </form>
+
+            </div>
+
+            <!-- EVENTS LIST -->
+            <div class="card p-3 shadow-sm">
+
+                <h5>📅 Events</h5>
+
+                {% for e in events %}
+                    <div class="border-bottom py-2">
+                        <strong>{{ e.title }}</strong><br>
+                        <small>{{ e.date }} | {{ e.location }}</small>
+                        <p class="mb-0">{{ e.description }}</p>
+                    </div>
+                {% empty %}
+                    <p>No events created</p>
+                {% endfor %}
 
             </div>
 
         </div>
 
-        {% empty %}
+        <!-- MEMBERS -->
+        <div class="col-md-4">
 
-        <p>6 projects available.</p>
+            <div class="card p-3 shadow-sm">
 
-        {% endfor %}
+                <h5>👥 Members</h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+                        <th>Name</th>
+                        <th>Role</th>
+                    </tr>
+
+                    {% for m in members %}
+                    <tr>
+                        <td>{{ m.first_name }} {{ m.last_name }}</td>
+                        <td>{{ m.role }}</td>
+                    </tr>
+                    {% endfor %}
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <!-- PROJECTS -->
+        <div class="col-md-4">
+
+            <div class="card p-3 shadow-sm">
+
+                <h5>📌 Projects</h5>
+
+                {% for project in projects %}
+
+                    <div class="border-bottom py-2">
+
+                        <strong>{{ project.title }}</strong><br>
+                        <small>{{ project.location }}</small>
+
+                        <p>{{ project.description|slice:":60" }}...</p>
+
+                    </div>
+
+                {% empty %}
+                    <p>No projects available</p>
+                {% endfor %}
+
+            </div>
+
+        </div>
 
     </div>
 

@@ -3,57 +3,60 @@
 
 {% block content %}
 
-<!-- HERO SECTION -->
-<div class="hero-bg">
+<!-- PREMIUM HERO -->
+<div class="hero-premium d-flex align-items-center">
 
-    <h1 style="font-size:48px; font-weight:700;">
-        Welcome to Community Volunteers
-    </h1>
+    <div class="hero-overlay"></div>
 
-    <p style="font-size:18px; margin-top:10px;">
-        Connecting Communities, Volunteers & Leaders for Real Impact
-    </p>
+    <div class="container text-center text-white position-relative">
 
-    {% if not request.user.is_authenticated %}
-        <a href="/register/" class="btn btn-light btn-lg mt-4 px-4">
-            Join Now
-        </a>
-    {% else %}
-        <a href="/dashboard/" class="btn btn-warning btn-lg mt-4 px-4">
-            Go to Dashboard
-        </a>
-    {% endif %}
+        <h1 class="hero-title" data-aos="fade-up">
+            Community Volunteers Platform
+        </h1>
+
+        <p class="hero-subtitle" data-aos="fade-up" data-aos-delay="200">
+            Connecting Communities, Volunteers & Leaders for Real Impact
+        </p>
+
+        <div data-aos="fade-up" data-aos-delay="400">
+            {% if not request.user.is_authenticated %}
+                <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4 me-2">
+                    Join Now
+                </a>
+            {% else %}
+                <a href="{% url 'dashboard' %}" class="btn btn-warning btn-lg px-4">
+                    Go to Dashboard
+                </a>
+            {% endif %}
+        </div>
+
+    </div>
 
 </div>
 
-<br>
-
-<!-- ABOUT SECTION -->
+<!-- ABOUT -->
 <div class="container my-5">
 
-    <div class="row align-items-center g-4">
+    <div class="row align-items-center g-5">
 
-        <div class="col-md-6">
-            <img src="{% static 'images/about.jpg' %}"
-                 class="img-fluid rounded shadow"
-                 style="border-radius: 15px;">
+        <div class="col-md-6" data-aos="fade-right">
+            <img src="{% static 'images/about.jpg' %}" class="img-fluid rounded shadow-lg">
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-6" data-aos="fade-left">
 
-            <h2 class="mb-3">About Community Volunteer</h2>
+            <h2 class="fw-bold mb-3">About Community Volunteer</h2>
 
             <p>
-                Voluntee is a civic engagement platform that connects volunteers,
-                community leaders, and organizations to solve real-world challenges
-                such as cleanups, education support, and community development.
+                Volunteer connects volunteers, leaders and communities to work together
+                on impactful projects including education, environment and development.
             </p>
 
             <p>
-                We believe in transparency, teamwork, and real community impact.
+                We believe in transparency, teamwork and real measurable community impact.
             </p>
 
-            <a href="/about/" class="btn btn-outline-primary mt-2">
+            <a href="#" class="btn btn-primary mt-2">
                 Learn More
             </a>
 
@@ -63,84 +66,314 @@
 
 </div>
 
-<br>
 
-<!-- PROJECTS SECTION (CONTAINER STYLE DESIGN) --> <div class="container my-5">
-     <h2 class="text-center mb-5 fw-bold">Our Community Projects</h2> 
-     <div class="row g-4"> 
-        <!-- PROJECT 1 -->
-          <div class="col-lg-4 col-md-6" data-aos="fade-up">
-             <div class="project-container"> <div class="project-img"> 
-                <img src="{% static 'images/tree.jpg' %}"> </div>
-                 <div class="project-content"> <span class="status completed">Completed</span>
-                     <h5>🌳 Tree Planting Initiative</h5> <p>Large-scale environmental restoration through tree planting campaigns across communities.</p> </div> </div> </div> <!-- PROJECT 2 --> <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100"> <div class="project-container"> <div class="project-img"> <img src="{% static 'images/cleanup.jpg' %}"> </div> <div class="project-content"> <span class="status completed">Completed</span> <h5>🧹 Community Clean-up</h5> <p>Organized clean-up drives improving hygiene and environmental safety in neighborhoods.</p> </div> </div> </div> <!-- PROJECT 3 --> <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200"> <div class="project-container"> <div class="project-img"> <img src="{% static 'images/education.jpg' %}"> </div> <div class="project-content"> <span class="status completed">Completed</span> <h5>📚 Educational Support Program</h5> <p>Providing learning materials, mentorship, and academic support to students in need.</p> </div> </div> </div> <!-- PROJECT 4 --> <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300"> <div class="project-container"> <div class="project-img"> <img src="{% static 'images/water.jpg' %}"> </div> <div class="project-content"> <span class="status completed">Completed</span> <h5>💧 Clean Water Access</h5> <p>Supplying safe drinking water solutions to rural and underserved communities.</p> </div> </div> </div> <!-- PROJECT 5 --> <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400"> <div class="project-container"> <div class="project-img"> <img src="{% static 'images/community.jpg' %}"> </div> <div class="project-content"> <span class="status ongoing">Ongoing</span> <h5>🏢 Community Center Construction</h5> <p>Building a modern facility for training, meetings, and community development programs.</p> </div> </div> </div> <!-- PROJECT 6 --> <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500"> <div class="project-container"> <div class="project-img"> <img src="{% static 'images/solar.jpg' %}"> </div>
-  <div class="project-content"> <span class="status completed">Completed</span> <h5>☀ Solar Energy Project</h5> <p>Promoting clean renewable energy by installing solar systems in communities.</p> </div> </div> </div> </div> </div>
-
-<!-- IMPACT SECTION -->
+<!-- PROJECTS -->
 <div class="container my-5">
 
-    <h2 class="text-center mb-5 fw-bold">Our Impact in Communities</h2>
+    <h2 class="text-center fw-bold mb-5">Our Community Projects</h2>
 
-    <div class="row g-4 text-center">
+    <div class="row g-4">
 
-        <div class="col-md-4">
-            <div class="impact-card bg-community">
-                <div class="impact-icon">🌍</div>
-                <h1>25+</h1>
-                <h5>Communities Reached</h5>
-                <p>We are actively working across Laikipia and beyond.</p>
+        <!-- 1 -->
+        <div class="col-md-4" data-aos="zoom-in">
+            <div class="premium-card">
+                <img src="{% static 'images/tree.jpg' %}">
+                <div class="p-3">
+                    <span class="badge bg-success mb-2">Completed</span>
+                    <h5>🌳 Tree Planting Initiative</h5>
+                    <p>Environmental restoration through tree planting campaigns.</p>
+                </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="impact-card bg-volunteers">
-                <div class="impact-icon">👥</div>
-                <h1>500+</h1>
-                <h5>Active Volunteers</h5>
-                <p>People joining hands for real community change.</p>
+        <!-- 2 -->
+        <div class="col-md-4" data-aos="zoom-in" data-aos-delay="100">
+            <div class="premium-card">
+                <img src="{% static 'images/cleanup.jpg' %}">
+                <div class="p-3">
+                    <span class="badge bg-success mb-2">Completed</span>
+                    <h5>🧹 Community Clean-up</h5>
+                    <p>Improving hygiene and environmental safety.</p>
+                </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="impact-card bg-projects">
-                <div class="impact-icon">📊</div>
-                <h1>10+</h1>
-                <h5>Projects Completed</h5>
-                <p>Successful initiatives improving lives daily.</p>
+        <!-- 3 -->
+        <div class="col-md-4" data-aos="zoom-in" data-aos-delay="200">
+            <div class="premium-card">
+                <img src="{% static 'images/education.jpg' %}">
+                <div class="p-3">
+                    <span class="badge bg-success mb-2">Completed</span>
+                    <h5>📚 Educational Support</h5>
+                    <p>Providing learning materials and mentorship.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4 -->
+        <div class="col-md-4" data-aos="zoom-in" data-aos-delay="300">
+            <div class="premium-card">
+                <img src="{% static 'images/water.jpg' %}">
+                <div class="p-3">
+                    <span class="badge bg-warning mb-2">Ongoing</span>
+                    <h5>💧 Clean Water Access</h5>
+                    <p>Supplying safe drinking water solutions.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5 -->
+        <div class="col-md-4" data-aos="zoom-in" data-aos-delay="400">
+            <div class="premium-card">
+                <img src="{% static 'images/community.jpg' %}">
+                <div class="p-3">
+                    <span class="badge bg-warning mb-2">Ongoing</span>
+                    <h5>🏢 Community Center Construction</h5>
+                    <p>Building modern community development facilities.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6 -->
+        <div class="col-md-4" data-aos="zoom-in" data-aos-delay="500">
+            <div class="premium-card">
+                <img src="{% static 'images/solar.jpg' %}">
+                <div class="p-3">
+                    <span class="badge bg-success mb-2">Completed</span>
+                    <h5>☀ Solar Energy Project</h5>
+                    <p>Promoting clean renewable energy in communities.</p>
+                </div>
             </div>
         </div>
 
     </div>
+
 </div>
 
-<!-- CALL TO ACTION (WHATSAPP) -->
+
+<!-- IMPACT SECTION -->
+<div class="impact-premium">
+
+    <div class="container">
+
+        <div class="text-center text-white mb-5">
+            <h2 class="fw-bold">Our Impact in Communities</h2>
+            <p>
+                Real numbers showing the difference volunteers and leaders are making
+                across Laikipia and surrounding regions.
+            </p>
+        </div>
+
+        <div class="row g-4 text-center">
+
+            <!-- Communities -->
+            <div class="col-md-4" data-aos="fade-up">
+                <div class="impact-card">
+
+                    <div class="impact-icon">
+                        🌍
+                    </div>
+
+                    <h1 class="counter" data-target="25">0</h1>
+
+                    <h5>Communities Reached</h5>
+
+                    <p>
+                        We have successfully launched volunteer programs in multiple
+                        towns and rural areas improving lives.
+                    </p>
+
+                </div>
+            </div>
+
+            <!-- Volunteers -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="150">
+                <div class="impact-card">
+
+                    <div class="impact-icon">
+                        👥
+                    </div>
+
+                    <h1 class="counter" data-target="500">0</h1>
+
+                    <h5>Active Volunteers</h5>
+
+                    <p>
+                        Dedicated individuals working together to create sustainable
+                        and measurable community impact.
+                    </p>
+
+                </div>
+            </div>
+
+            <!-- Projects -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="impact-card">
+
+                    <div class="impact-icon">
+                        📊
+                    </div>
+
+                    <h1 class="counter" data-target="10">0</h1>
+
+                    <h5>Projects Completed</h5>
+
+                    <p>
+                        From clean water to education support, our initiatives
+                        continue transforming communities.
+                    </p>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<style>
+
+.impact-premium{
+background: linear-gradient(90deg,#9ae859,#4b93e5);
+padding:80px 0;
+margin-top:60px;
+}
+
+.impact-card{
+background: rgba(241, 86, 86, 0.1);
+padding:30px;
+border-radius:20px;
+color:white;
+backdrop-filter: blur(10px);
+transition:0.3s;
+height:100%;
+}
+
+.impact-card:hover{
+transform: translateY(-10px);
+background: rgba(126, 240, 11, 0.2);
+}
+
+.impact-icon{
+font-size:40px;
+margin-bottom:10px;
+}
+
+</style>
+
+
+<!-- CTA -->
 <div class="container my-5">
 
-    <div class="cta-card text-center" data-aos="fade-up">
-
-        <div class="cta-icon">📱</div>
+    <div class="cta-premium text-center" data-aos="zoom-in">
 
         <h2>Join Our WhatsApp Community</h2>
 
-        <p class="mt-2">
-            Get real-time updates on volunteer opportunities and community projects in Laikipia County.
+        <p>
+            Get real-time updates on volunteer opportunities in Laikipia
         </p>
 
-        <!-- IMPORTANT: replace link -->
         <a href="https://chat.whatsapp.com/YOUR_REAL_GROUP_LINK"
            target="_blank"
-           class="btn btn-success btn-lg mt-3 px-4">
+           class="btn btn-success btn-lg mt-3">
 
             Join WhatsApp Group
 
         </a>
 
-        <p class="small text-muted mt-3">
-            Stay connected. Be part of the change.
-        </p>
-
     </div>
 
 </div>
+
+
+<style>
+
+/* HERO */
+.hero-premium{
+height:85vh;
+background: url("{% static 'images/hero.jpg' %}") center/cover;
+position:relative;
+}
+
+.hero-overlay{
+position:absolute;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:rgba(0,0,0,0.65);
+}
+
+.hero-title{
+font-size:48px;
+font-weight:700;
+}
+
+.hero-subtitle{
+font-size:20px;
+margin:15px 0;
+}
+
+/* CARD */
+.premium-card{
+background:white;
+border-radius:15px;
+overflow:hidden;
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
+transition:0.3s;
+}
+
+.premium-card:hover{
+transform:translateY(-10px);
+}
+
+.premium-card img{
+width:100%;
+height:220px;
+object-fit:cover;
+}
+
+/* IMPACT */
+.impact-section{
+background:linear-gradient(90deg,#0d6efd,#0a58ca);
+padding:60px 0;
+}
+
+/* CTA */
+.cta-premium{
+background:white;
+padding:50px;
+border-radius:20px;
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+</style>
+
+<script>
+
+// COUNTER ANIMATION
+document.querySelectorAll('.counter').forEach(counter => {
+    counter.innerText = '0';
+
+    const updateCounter = () => {
+        const target = +counter.getAttribute('data-target');
+        const c = +counter.innerText;
+
+        const increment = target / 100;
+
+        if(c < target){
+            counter.innerText = Math.ceil(c + increment);
+            setTimeout(updateCounter, 20);
+        }else{
+            counter.innerText = target + "+";
+        }
+    };
+
+    updateCounter();
+});
+
+</script>
 
 {% endblock %}
