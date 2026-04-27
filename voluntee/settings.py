@@ -128,3 +128,9 @@ LOGIN_REDIRECT_URL = 'dashboard'
 
 # DEFAULT PRIMARY KEY
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+ALLOWED_HOSTS = [
+    "community-volunteer.onrender.com",
+    "localhost",
+    "127.0.0.1"
+]
