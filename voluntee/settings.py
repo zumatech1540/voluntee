@@ -14,15 +14,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY
 SECRET_KEY = 'django-insecure-7yitp^5gu-c1&u(f=m55ju(we(z!l42eox)1pjz1(^2y0g0%k7'
 
+DEBUG = True
 
-DEBUG = False
+ALLOWED_HOSTS = [
+    "community-volunteer.onrender.com",
+    "localhost",
+    "127.0.0.1"
+]
 
-SECURE_SSL_REDIRECT = True
+# Local defaults
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+# Production (Render)
+if os.environ.get("RENDER"):
+    DEBUG = False
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # APPLICATIONS
 INSTALLED_APPS = [
@@ -135,8 +145,3 @@ LOGIN_REDIRECT_URL = 'dashboard'
 # DEFAULT PRIMARY KEY
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-ALLOWED_HOSTS = [
-    "community-volunteer.onrender.com",
-    "localhost",
-    "127.0.0.1"
-]

@@ -20,7 +20,7 @@ urlpatterns = [
     path('gallery/', views.gallery_page, name='gallery'),
     path('blogs/', views.blogs_page, name='blogs'),
     path('contact/', views.contact_page, name='contact'),
-
+    path('donate/', views.donate, name='donate'),
     # ================= EVENTS =================
     path('events/', views.events_page, name='events'),
     path('events/create/', views.create_event, name='create_event'),

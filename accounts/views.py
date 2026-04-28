@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 User = get_user_model()
+from .models import Donation
 
 from .models import PollingStation, Ward
 import openpyxl
@@ -42,6 +43,9 @@ def volunteers_page(request):
 
 def gallery_page(request):
     return render(request, "gallery.html")
+
+def donation_page(request):
+    return render(request, "donation.html")
 
 
 def blogs_page(request):
@@ -194,7 +198,7 @@ def dashboard(request):
     })
 
 
-# ================= ADMIN DASHBOARD =================
+# ================= dashboard =================
 @login_required
 def dashboard(request):
 
@@ -245,6 +249,29 @@ def admin_dashboard(request):
         "members": members,
         "stats": stats
     })
+
+# ================= donate =================
+
+
+
+def donate(request):
+
+    if request.method == "POST":
+
+        Donation.objects.create(
+            name=request.POST.get("name"),
+            email=request.POST.get("email"),
+            phone=request.POST.get("phone"),
+            donation_type=request.POST.get("donation_type"),
+            amount=request.POST.get("amount") or None,
+            message=request.POST.get("message")
+        )
+
+        messages.success(request, "Thank you for your donation!")
+
+        return redirect("donate")
+
+    return render(request, "donate.html")
 
 # ================= EVENTS =================
 def events_page(request):

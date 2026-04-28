@@ -83,7 +83,7 @@
 
 <div class="container-fluid">
 
-    <a class="navbar-brand" href="{% url 'home' %}">🌍 Voluntee</a>
+    <a class="navbar-brand" href="{% url 'home' %}">🌍 Volunteer</a>
 
     <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu">
         <span class="navbar-toggler-icon"></span>
@@ -98,6 +98,11 @@
             <li class="nav-item"><a class="nav-link" href="{% url 'volunteers' %}">Volunteers</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'gallery' %}">Gallery</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'events' %}">Events</a></li>
+            <li class="nav-item">
+                       <a class="nav-link" href="{% url 'donate' %}">
+                         Donate
+                             </a>
+           </li>
             <li class="nav-item"><a class="nav-link" href="{% url 'blogs' %}">Blogs</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}">Contacts</a></li>
 
