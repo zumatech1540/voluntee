@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <h3>📋 Tasks for {{ selected_user.first_name }} {{ selected_user.last_name }}</h3>
+
+    <a href="{% url 'manage_users' %}" class="btn btn-secondary mb-3">
+        ← Back to Users
+    </a>
+
+    <div class="card p-3">
+
+        <table class="table table-bordered">
+
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Due Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for task in tasks %}
+            <tr>
+
+                <td>{{ task.title }}</td>
+
+                <td>
+                    {% if task.status == "completed" %}
+                        <span class="badge bg-success">Completed</span>
+                    {% elif task.status == "in_progress" %}
+                        <span class="badge bg-info">In Progress</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    <span class="badge bg-dark">{{ task.priority }}</span>
+                </td>
+
+                <td>{{ task.due_date }}</td>
+
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">No tasks assigned</td>
+            </tr>
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

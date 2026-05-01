@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h3>Register Voter</h3>
+
+<form method="POST">
+{% csrf_token %}
+
+<div class="row">
+
+<div class="col-md-6">
+<label>First Name</label>
+<input type="text" name="first_name" class="form-control" required>
+</div>
+
+<div class="col-md-6">
+<label>Last Name</label>
+<input type="text" name="last_name" class="form-control" required>
+</div>
+
+<div class="col-md-6 mt-3">
+<label>Phone</label>
+<input type="text" name="phone" class="form-control">
+</div>
+
+<div class="col-md-6 mt-3">
+<label>Email</label>
+<input type="email" name="email" class="form-control">
+</div>
+
+<div class="col-md-6 mt-3">
+<label>Ward</label>
+<select name="ward" class="form-control">
+<option value="">Select ward</option>
+{% for w in wards %}
+<option value="{{ w.id }}">{{ w.name }}</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="col-md-6 mt-3">
+<label>Polling Station</label>
+<select name="polling_station" class="form-control">
+<option value="">Select station</option>
+{% for p in polling %}
+<option value="{{ p.id }}">{{ p.name }}</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="col-md-6 mt-3">
+<label>Support Status</label>
+<select name="support_status" class="form-control">
+<option value="supporter">Supporter</option>
+<option value="undecided">Undecided</option>
+<option value="opponent">Opponent</option>
+</select>
+</div>
+
+<div class="col-md-12 mt-3">
+<label>Notes</label>
+<textarea name="notes" class="form-control"></textarea>
+</div>
+
+<button class="btn btn-primary mt-3">
+Save Voter
+</button>
+
+</form>
+
+</div>
+
+{% endblock %}

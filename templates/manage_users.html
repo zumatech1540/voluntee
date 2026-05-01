@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <h3>⚙ Admin Control Panel (Superuser Only)</h3>
+
+    <div class="row">
+
+        <!-- ================= ADD USER ================= -->
+        
+
+        <div class="col-md-4">
+
+            <div class="card p-3 mb-4">
+
+                <h5>➕ Add User</h5>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_user">
+
+                    <input type="text" name="first_name" class="form-control mb-2" placeholder="First Name" required>
+                    <input type="text" name="last_name" class="form-control mb-2" placeholder="Last Name">
+                    <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
+                    <input type="text" name="phone" class="form-control mb-2" placeholder="Phone">
+
+                    <select name="role" class="form-control mb-2">
+                        <option value="volunteer">Volunteer</option>
+                        <option value="leader">Leader</option>
+                    </select>
+
+                    <select name="ward" class="form-control mb-2">
+                        {% for w in wards %}
+                        <option value="{{ w.id }}">{{ w.name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <select name="polling_station" class="form-control mb-2">
+                        {% for s in stations %}
+                        <option value="{{ s.id }}">{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <button class="btn btn-primary w-100">Create User</button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+        <!-- ================= QUICK ATTENDANCE ================= -->
+        <div class="col-md-4">
+
+            <div class="card p-3 mb-4">
+
+                <h5>📋 Quick Attendance (Register + Mark Present)</h5>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="attendance">
+
+                    <select name="event_id" class="form-control mb-2">
+                        {% for e in events %}
+                        <option value="{{ e.id }}">{{ e.title }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <select name="voter_id" class="form-control mb-2">
+                        <option value="">-- Select Existing Voter (Optional) --</option>
+                        {% for v in voters %}
+                        <option value="{{ v.id }}">{{ v.first_name }} {{ v.last_name }} - {{ v.phone }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <hr>
+
+                    <input type="text" name="first_name" class="form-control mb-2" placeholder="New Voter First Name">
+                    <input type="text" name="phone" class="form-control mb-2" placeholder="Phone">
+
+                    <button class="btn btn-success w-100">
+                        ✔ Mark Attendance
+                    </button>
+
+                    <a href="{% url 'register_voter' %}" class="btn btn-primary w-100 mt-2">
+                        ➕ Register New Voter
+                    </a>
+                </form>
+
+            </div>
+
+        </div>
+         <div class="col-md-4">
+
+            <div class="card p-3 mb-4">
+
+                <a href="{% url 'assign_task_admin' user.id %}" class="btn btn-primary btn-sm mb-1">
+    ➕ Assign Task
+</a>
+
+            </div>
+
+        </div>
+        
+        <!-- ================= USERS LIST ================= -->
+        <div class="col-md-12">
+
+            <div class="card p-3">
+
+                <h5>👥 All Users Management</h5>
+
+                <table class="table table-bordered mt-3">
+
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Email</th>
+                            <th>Tasks</th>
+                            <th>Control</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    {% for user in users %}
+                    <tr>
+
+                        <td>{{ user.first_name }} {{ user.last_name }}</td>
+
+                        <td>
+                            {% if user.is_superuser %}
+                                <span class="badge bg-dark">Admin</span>
+                            {% else %}
+                                <span class="badge bg-info">{{ user.role }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ user.email }}</td>
+
+                        <!-- ================= TASK STATS ================= -->
+                        <td>
+                            <span class="badge bg-primary">
+                                {{ user.total_tasks }} Tasks
+                            </span>
+
+                            {% if user.total_tasks > 0 %}
+                                <br>
+                                <span class="badge bg-success">
+                                    ✔ {{ user.completed_tasks }}
+                                </span>
+
+                                <span class="badge bg-warning text-dark">
+                                    ⏳ {{ user.pending_tasks }}
+                                </span>
+
+                                <span class="badge bg-info text-dark">
+                                    🔄 {{ user.in_progress_tasks }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+
+                            <!-- VIEW TASKS -->
+                            <a href="{% url 'user_tasks_admin' user.id %}" class="btn btn-success btn-sm mb-1">
+                                📋 View Tasks
+                            </a>
+
+                            <!-- ROLE MANAGEMENT -->
+                            {% if not user.is_superuser %}
+
+                                {% if user.role == "volunteer" %}
+                                    <a href="{% url 'make_leader' user.id %}" class="btn btn-primary btn-sm">
+                                        Make Leader
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'make_volunteer' user.id %}" class="btn btn-warning btn-sm">
+                                        Make Volunteer
+                                    </a>
+                                {% endif %}
+
+                                <a href="{% url 'make_admin' user.id %}" class="btn btn-dark btn-sm">
+                                    Make Admin
+                                </a>
+
+                            {% else %}
+
+                                {% if user != request.user %}
+                                    <a href="{% url 'remove_admin' user.id %}" class="btn btn-secondary btn-sm">
+                                        Remove Admin
+                                    </a>
+                                {% endif %}
+
+                            {% endif %}
+
+                            <!-- DELETE -->
+                            <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm">
+                                Delete
+                            </a>
+
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

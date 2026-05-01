@@ -44,6 +44,7 @@
             border-radius:12px;
             padding:20px;
             box-shadow:0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom:20px;
         }
 
         .stat-card{
@@ -56,14 +57,8 @@
         .bg2{background:#059669;}
         .bg3{background:#f59e0b;}
         .bg4{background:#ef4444;}
-
-        .navbar-custom{
-            background:white;
-            padding:15px;
-            border-radius:12px;
-            box-shadow:0 2px 6px rgba(0,0,0,0.05);
-            margin-bottom:20px;
-        }
+        .bg5{background:#0ea5e9;}
+        .bg6{background:#8b5cf6;}
 
         footer{
             margin-top:30px;
@@ -79,12 +74,13 @@
 
 <body>
 
-<!-- Sidebar -->
+<!-- SIDEBAR -->
 <div class="sidebar">
 
     <h4 class="mb-4">Admin Panel</h4>
 
     <a href="{% url 'admin_dashboard' %}">Dashboard</a>
+    <a href="{% url 'manage_users' %}">Manage Users</a>
     <a href="{% url 'events' %}">Events</a>
     <a href="{% url 'admin_events_review' %}">Approve Events</a>
     <a href="{% url 'create_event' %}">Create Event</a>
@@ -95,21 +91,14 @@
 </div>
 
 
+<!-- MAIN CONTENT -->
 <div class="main">
 
-    <!-- NAVBAR -->
-    <div class="navbar-custom d-flex justify-content-between">
-
-        <div>
-            <h5>Admin Dashboard</h5>
-        </div>
-
-        <div>
-            Welcome, <strong>{{ request.user.first_name }}</strong>
-        </div>
-
+    <!-- TOP BAR -->
+    <div class="d-flex justify-content-between mb-3">
+        <h5>Admin Dashboard</h5>
+        <div>Welcome, <strong>{{ request.user.first_name }}</strong></div>
     </div>
-
 
     <!-- STATS -->
     <div class="row mb-4">
@@ -117,38 +106,112 @@
         <div class="col-md-3">
             <div class="stat-card bg1">
                 <h6>Total Members</h6>
-                <h3>{{ members.count }}</h3>
+                <h3>{{ total_members }}</h3>
             </div>
         </div>
 
         <div class="col-md-3">
             <div class="stat-card bg2">
                 <h6>Total Events</h6>
-                <h3>{{ events.count }}</h3>
+                <h3>{{ total_events }}</h3>
             </div>
         </div>
 
         <div class="col-md-3">
             <div class="stat-card bg3">
-                <h6>Pending Events</h6>
-                <h3>{{ pending_events.count }}</h3>
+                <h6>Total Voters</h6>
+                <h3>{{ total_voters }}</h3>
             </div>
         </div>
 
         <div class="col-md-3">
             <div class="stat-card bg4">
-                <h6>Leaders</h6>
-                <h3>{{ leaders_count }}</h3>
+                <h6>Total Attendance</h6>
+                <h3>{{ total_attendance }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3 mt-3">
+            <div class="stat-card bg5">
+                <h6>Pending Events</h6>
+                <h3>{{ pending_events }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3 mt-3">
+            <div class="stat-card bg6">
+                <h6>Total Donations</h6>
+                <h3>KES {{ total_donations }}</h3>
             </div>
         </div>
 
     </div>
 
 
-    <!-- MEMBERS -->
-    <div class="card-box mb-4">
+    <!-- PENDING EVENTS -->
+    <div class="card-box">
 
-        <h5 class="mb-3">Members Overview</h5>
+        <h5>Pending Event Approvals</h5>
+
+        {% for event in events %}
+            {% if event.approval_status == "pending" %}
+
+            <div class="border-bottom py-2">
+
+                <strong>{{ event.title }}</strong><br>
+                <small>{{ event.location }} | {{ event.date }}</small>
+
+                <div class="mt-2">
+
+                    <a href="{% url 'approve_event' event.id %}" class="btn btn-sm btn-success">Approve</a>
+                    <a href="{% url 'reject_event' event.id %}" class="btn btn-sm btn-danger">Reject</a>
+
+                </div>
+
+            </div>
+
+            {% endif %}
+        {% empty %}
+            <p>No pending events</p>
+        {% endfor %}
+
+    </div>
+
+
+    <!-- ATTENDANCE PER EVENT -->
+    <div class="card-box">
+
+        <h5>📊 Attendance per Event</h5>
+
+        <table class="table table-hover">
+
+            <thead>
+                <tr>
+                    <th>Event</th>
+                    <th>Total Attendance</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for event in events %}
+            <tr>
+                <td>{{ event.title }}</td>
+                <td>{{ event.attendance_set.count }}</td>
+            </tr>
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- MEMBERS -->
+    <div class="card-box">
+
+        <h5>Members Overview</h5>
 
         <table class="table table-hover">
 
@@ -179,7 +242,14 @@
                 </td>
 
                 <td>{{ user.email }}</td>
-                <td>{{ user.phone }}</td>
+
+                <td>
+                    {% if user.phone %}
+                        {{ user.phone|slice:":5" }}****
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
 
             </tr>
             {% endfor %}
@@ -194,7 +264,7 @@
     <!-- EVENTS -->
     <div class="card-box">
 
-        <h5 class="mb-3">Events Overview</h5>
+        <h5>Events Overview</h5>
 
         <table class="table table-hover">
 
@@ -227,7 +297,45 @@
                     {% endif %}
                 </td>
 
-                <td>{{ event.created_by.first_name }}</td>
+                <td>{{ event.created_by.first_name|default:"System" }}</td>
+
+            </tr>
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- DONATIONS -->
+    <div class="card-box">
+
+        <h5>Recent Donations</h5>
+
+        <table class="table table-hover">
+
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Phone</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for d in donations|slice:":6" %}
+            <tr>
+
+                <td>{{ d.name }}</td>
+                <td>{{ d.donation_type }}</td>
+                <td>KES {{ d.amount }}</td>
+                <td>{{ d.phone|slice:":5" }}****</td>
+                <td>{{ d.created_at|date:"M d, Y" }}</td>
 
             </tr>
             {% endfor %}
@@ -241,7 +349,7 @@
 
     <!-- FOOTER -->
     <footer>
-        Admin Dashboard © {{ now|date:"Y" }} | Volunteer Management System
+        Admin Dashboard © {% now "Y" %} | Campaign System
     </footer>
 
 </div>

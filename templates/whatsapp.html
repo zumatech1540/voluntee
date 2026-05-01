@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h3>WhatsApp Broadcast</h3>
+
+<form method="GET">
+
+<div class="row">
+
+<div class="col-md-4">
+<label>Ward</label>
+<select name="ward" class="form-control">
+<option value="">All wards</option>
+{% for w in wards %}
+<option value="{{ w.id }}">{{ w.name }}</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="col-md-4">
+<label>Support Level</label>
+<select name="support" class="form-control">
+<option value="">All</option>
+<option value="supporter">Supporters</option>
+<option value="undecided">Undecided</option>
+<option value="opponent">Opponent</option>
+</select>
+</div>
+
+<div class="col-md-12 mt-3">
+<label>Message</label>
+<textarea name="message" class="form-control" rows="4"></textarea>
+</div>
+
+<button class="btn btn-success mt-3">
+Send WhatsApp
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+{% endblock %}

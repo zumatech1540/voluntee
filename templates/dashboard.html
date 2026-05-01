@@ -4,9 +4,12 @@
 
 <div class="container-fluid">
 
-    <h2 class="mb-3">📊 Leader Dashboard</h2>
+    <!-- ================= HEADER ================= -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>📊 Leader Dashboard</h2>
+    </div>
 
-    <!-- NOTIFICATIONS -->
+    <!-- ================= NOTIFICATIONS ================= -->
     <div class="alert alert-info">
         <strong>🔔 Notifications:</strong>
         <ul class="mb-0">
@@ -16,58 +19,201 @@
         </ul>
     </div>
 
-    <!-- DOWNLOAD BUTTON -->
-    <a href="{% url 'download_users_excel' %}" class="btn btn-success mb-3">
-        ⬇ Download Users (Excel)
-    </a>
+    <!-- ================= QUICK ACTIONS ================= -->
+    <div class="mb-4 d-flex gap-2 flex-wrap">
 
+        <a href="{% url 'register_voter' %}" class="btn btn-primary">
+            ➕ Add Voter
+        </a>
+
+        <a href="{% url 'create_event' %}" class="btn btn-info">
+            📅 Create Event
+        </a>
+
+        <a href="{% url 'assign_task' %}" class="btn btn-warning">
+                               🧑 Assign Task
+        </a>
+
+        <a href="#" class="btn btn-success">
+            📊 Reports
+        </a>
+
+        <a href="{% url 'voter_list' %}" class="btn btn-dark">
+            🗳 View Voters
+        </a>
+
+    </div>
+
+    <!-- ================= EVENT STATS ================= -->
+    <div class="row mb-3">
+
+        <div class="col-md-3">
+            <div class="card p-3 text-center shadow-sm">
+                <h6>Total Events</h6>
+                <h3>{{ total_events }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3 text-center shadow-sm">
+                <h6>Pending Events</h6>
+                <h3 class="text-warning">{{ pending_events }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3 text-center shadow-sm">
+                <h6>Approved Events</h6>
+                <h3 class="text-success">{{ approved_events }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3 text-center shadow-sm">
+                <h6>Total Members</h6>
+                <h3>{{ total_members }}</h3>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= VOTER STATS ================= -->
+    <div class="row mb-4">
+
+        <div class="col-md-3">
+            <div class="card p-3 text-center shadow-sm">
+                <h6>Total Voters</h6>
+                <h3>{{ total_voters }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3 text-center shadow-sm">
+                <h6>Supporters</h6>
+                <h3 class="text-success">{{ supporters }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3 text-center shadow-sm">
+                <h6>Undecided</h6>
+                <h3 class="text-warning">{{ undecided }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3 text-center shadow-sm">
+                <h6>Opponents</h6>
+                <h3 class="text-danger">{{ opponents }}</h3>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= CHARTS ================= -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <div class="row mb-4">
+
+        <div class="col-md-6">
+            <div class="card p-3 shadow-sm">
+                <h5>📊 Voter Distribution</h5>
+                <canvas id="supportChart"></canvas>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card p-3 shadow-sm">
+                <h5>🏘 Ward Strength</h5>
+                <canvas id="wardChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= WARD ANALYSIS ================= -->
+    <div class="card p-3 shadow-sm mb-4">
+
+        <h5>📍 Ward Analysis</h5>
+
+        <table class="table table-sm">
+
+            <thead>
+                <tr>
+                    <th>Ward</th>
+                    <th>Total</th>
+                    <th>Supporters</th>
+                    <th>Undecided</th>
+                    <th>Opponents</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for w in ward_analysis %}
+                <tr>
+                    <td>{{ w.ward__name }}</td>
+                    <td>{{ w.total }}</td>
+                    <td>{{ w.supporters }}</td>
+                    <td>{{ w.undecided }}</td>
+                    <td>{{ w.opponents }}</td>
+
+                    <td>
+                        {% if w.supporters > w.undecided and w.supporters > w.opponents %}
+                            <span class="text-success">Strong</span>
+                        {% else %}
+                            <span class="text-danger">Weak</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- ================= MAIN CONTENT ================= -->
     <div class="row">
 
-        <!-- EVENTS SECTION -->
+        <!-- ================= EVENTS ================= -->
         <div class="col-md-4">
 
-            <div class="card p-3 shadow-sm mb-3">
-
-                <h5>📅 Create Event</h5>
-
-                <form method="POST" action="{% url 'create_event' %}">
-                    {% csrf_token %}
-
-                    <input type="text" name="title" class="form-control mb-2" placeholder="Event Title">
-
-                    <textarea name="description" class="form-control mb-2" placeholder="Description"></textarea>
-
-                    <input type="text" name="location" class="form-control mb-2" placeholder="Location">
-
-                    <input type="date" name="date" class="form-control mb-2">
-
-                    <button class="btn btn-primary w-100">
-                        Create Event
-                    </button>
-                </form>
-
-            </div>
-
-            <!-- EVENTS LIST -->
             <div class="card p-3 shadow-sm">
 
-                <h5>📅 Events</h5>
+                <h5>📅 Recent Events</h5>
 
                 {% for e in events %}
                     <div class="border-bottom py-2">
+
                         <strong>{{ e.title }}</strong><br>
-                        <small>{{ e.date }} | {{ e.location }}</small>
-                        <p class="mb-0">{{ e.description }}</p>
+
+                        <small>
+                            {{ e.date }} | {{ e.location }} |
+
+                            {% if e.approval_status == "pending" %}
+                                <span class="text-warning">Pending</span>
+                            {% elif e.approval_status == "approved" %}
+                                <span class="text-success">Approved</span>
+                            {% else %}
+                                <span class="text-danger">Rejected</span>
+                            {% endif %}
+                        </small>
+
+                        <p class="mb-0">{{ e.description|truncatechars:80 }}</p>
+
                     </div>
                 {% empty %}
-                    <p>No events created</p>
+                    <p>No events available</p>
                 {% endfor %}
 
             </div>
 
         </div>
 
-        <!-- MEMBERS -->
+        <!-- ================= MEMBERS ================= -->
         <div class="col-md-4">
 
             <div class="card p-3 shadow-sm">
@@ -76,17 +222,21 @@
 
                 <table class="table table-sm">
 
-                    <tr>
-                        <th>Name</th>
-                        <th>Role</th>
-                    </tr>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                        </tr>
+                    </thead>
 
-                    {% for m in members %}
-                    <tr>
-                        <td>{{ m.first_name }} {{ m.last_name }}</td>
-                        <td>{{ m.role }}</td>
-                    </tr>
-                    {% endfor %}
+                    <tbody>
+                        {% for m in members %}
+                        <tr>
+                            <td>{{ m.first_name }} {{ m.last_name }}</td>
+                            <td>{{ m.role }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
 
                 </table>
 
@@ -94,7 +244,7 @@
 
         </div>
 
-        <!-- PROJECTS -->
+        <!-- ================= PROJECTS ================= -->
         <div class="col-md-4">
 
             <div class="card p-3 shadow-sm">
@@ -108,7 +258,7 @@
                         <strong>{{ project.title }}</strong><br>
                         <small>{{ project.location }}</small>
 
-                        <p>{{ project.description|slice:":60" }}...</p>
+                        <p>{{ project.description|truncatechars:60 }}</p>
 
                     </div>
 
@@ -123,5 +273,43 @@
     </div>
 
 </div>
+
+<!-- ================= CHART SCRIPT ================= -->
+<script>
+
+new Chart(document.getElementById('supportChart'), {
+    type: 'pie',
+    data: {
+        labels: ['Supporters', 'Undecided', 'Opponents'],
+        datasets: [{
+            data: [{{ supporters }}, {{ undecided }}, {{ opponents }}]
+        }]
+    }
+});
+
+const wardLabels = [
+    {% for w in ward_analysis %}
+        "{{ w.ward__name }}",
+    {% endfor %}
+];
+
+const wardData = [
+    {% for w in ward_analysis %}
+        {{ w.supporters }},
+    {% endfor %}
+];
+
+new Chart(document.getElementById('wardChart'), {
+    type: 'bar',
+    data: {
+        labels: wardLabels,
+        datasets: [{
+            label: 'Supporters',
+            data: wardData
+        }]
+    }
+});
+
+</script>
 
 {% endblock %}

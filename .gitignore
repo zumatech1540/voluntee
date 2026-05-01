@@ -1,0 +1,30 @@
+# ================= PYTHON =================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ================= DATABASE =================
+db.sqlite3
+
+# ================= MEDIA & STATIC =================
+media/
+staticfiles/
+
+# ================= ENVIRONMENT =================
+.env
+.env.*
+
+# ================= DJANGO =================
+*.log
+
+# ================= MIGRATIONS CACHE (OPTIONAL BUT SAFE) =================
+*/migrations/__pycache__/
+
+# ================= IDE =================
+.vscode/
+.idea/
+
+# ================= SYSTEM =================
+.DS_Store
+Thumbs.db

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container my-5">
+
+    <h3>📋 My Tasks</h3>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+
+        {% for task in tasks %}
+        <div class="col-md-4">
+
+            <div class="card p-3 shadow-sm mb-3">
+
+                <h5>{{ task.title }}</h5>
+
+                <p>{{ task.description }}</p>
+
+                <p><strong>Priority:</strong> {{ task.priority }}</p>
+                <p><strong>Status:</strong>
+                    <span class="
+                        {% if task.status == 'pending' %}text-warning
+                        {% elif task.status == 'in_progress' %}text-primary
+                        {% else %}text-success{% endif %}
+                    ">
+                        {{ task.status }}
+                    </span>
+                </p>
+
+                <p><strong>Due:</strong> {{ task.due_date }}</p>
+
+                <!-- STATUS UPDATE -->
+                <form method="POST" action="{% url 'update_task_status' task.id %}">
+                    {% csrf_token %}
+
+                    <select name="status" class="form-control mb-2">
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+
+                    <button class="btn btn-sm btn-primary w-100">
+                        Update Status
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+        {% empty %}
+            <p>No tasks assigned yet.</p>
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

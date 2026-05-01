@@ -4,6 +4,17 @@
 
 <div class="container my-5">
 
+    <!-- ================= MESSAGES ================= -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- ================= HEADER ================= -->
     <div class="d-flex justify-content-between align-items-center mb-4">
 
         <h2>📅 Community Events</h2>
@@ -16,9 +27,13 @@
 
     </div>
 
+    <!-- ================= EVENTS ================= -->
     <div class="row g-4">
 
         {% for e in events %}
+
+        <!-- SHOW ONLY APPROVED (OR OWNER / ADMIN) -->
+        {% if e.approval_status == "approved" or request.user.is_superuser or request.user == e.created_by %}
 
         <div class="col-md-4">
 
@@ -33,37 +48,47 @@
 
                 <div class="card-body">
 
-                    <!-- STATUS BADGE -->
-                    {% if e.status == "pending" %}
+                    <!-- STATUS -->
+                    {% if e.approval_status == "pending" %}
                         <span class="badge bg-warning mb-2">Pending Approval</span>
-                    {% elif e.status == "approved" %}
+                    {% elif e.approval_status == "approved" %}
                         <span class="badge bg-success mb-2">Approved</span>
-                    {% elif e.status == "rejected" and request.user.is_superuser %}
+                    {% elif e.approval_status == "rejected" and request.user.is_superuser %}
                         <span class="badge bg-danger mb-2">Rejected</span>
                     {% endif %}
 
                     <h5 class="fw-bold">{{ e.title }}</h5>
 
                     <p class="text-muted mb-1">📍 {{ e.location }}</p>
-
                     <p class="text-muted mb-2">📅 {{ e.date }}</p>
 
                     <p>
                         {{ e.description|slice:":100" }}...
                     </p>
 
-                    <!-- ATTENDEE INFO -->
-                    <p class="small text-secondary">
-                        👥 {{ e.attendees.count }} joined
+                    <!-- ================= JOIN BUTTON ================= -->
+                    {% if e.id in joined_events %}
+                        <button class="btn btn-success btn-sm w-100 mb-2" disabled>
+                            ✔ Joined
+                        </button>
+                    {% else %}
+                        <form method="POST" action="{% url 'join_event' e.id %}">
+                            {% csrf_token %}
+                            <button class="btn btn-primary btn-sm w-100 mb-2">
+                                Join Event
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <!-- ATTENDANCE COUNT -->
+                    <p class="small text-secondary mb-2">
+                        👥 {{ e.attendance_set.count }} joined
                     </p>
 
-                    <!-- VIEW -->
-                    <a href="{% url 'event_detail' e.id %}" class="btn btn-primary btn-sm w-100 mb-2">
-                        View Details
-                    </a>
+                   
 
                     <!-- LEADER EDIT -->
-                    {% if request.user == e.created_by and e.status == "pending" %}
+                    {% if request.user == e.created_by and e.approval_status == "pending" %}
                         <a href="{% url 'edit_event' e.id %}" class="btn btn-warning btn-sm w-100 mb-2">
                             Edit Event
                         </a>
@@ -72,7 +97,7 @@
                     <!-- ADMIN ACTIONS -->
                     {% if request.user.is_superuser %}
 
-                        {% if e.status == "pending" %}
+                        {% if e.approval_status == "pending" %}
                             <a href="{% url 'approve_event' e.id %}" class="btn btn-success btn-sm w-100 mb-2">
                                 Approve Event
                             </a>
@@ -93,6 +118,8 @@
             </div>
 
         </div>
+
+        {% endif %}
 
         {% empty %}
 

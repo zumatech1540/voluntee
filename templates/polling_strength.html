@@ -1,0 +1,17 @@
+<h3>Polling Station Deployment</h3>
+
+<table class="table table-bordered">
+
+<tr>
+<th>Polling Station</th>
+<th>Volunteers</th>
+</tr>
+
+{% for row in data %}
+<tr>
+<td>{{ row.station }}</td>
+<td>{{ row.count }}</td>
+</tr>
+{% endfor %}
+
+</table>

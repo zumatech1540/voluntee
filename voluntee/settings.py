@@ -46,8 +46,11 @@ INSTALLED_APPS = [
     'accounts',
     'projects',
     'participation',
+    
 ]
 
+AFRICASTALKING_USERNAME = "sandbox"
+AFRICASTALKING_API_KEY = "your_api_key_here"
 
 # MIDDLEWARE
 MIDDLEWARE = [

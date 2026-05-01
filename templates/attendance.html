@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <h3>📋 Event Attendance - {{ event.title }}</h3>
+
+    <!-- ================= ALERT MESSAGES ================= -->
+    {% if messages %}
+        {% for message in messages %}
+
+            <div class="alert
+                {% if message.tags == 'success' %}alert-success
+                {% elif message.tags == 'error' %}alert-danger
+                {% elif message.tags == 'warning' %}alert-warning
+                {% else %}alert-info
+                {% endif %}
+                alert-dismissible fade show"
+                role="alert">
+
+                {{ message }}
+
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+
+            </div>
+
+        {% endfor %}
+    {% endif %}
+
+
+    <!-- ================= ATTENDANCE FORM ================= -->
+    <div class="card p-3 mb-4 shadow-sm">
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="row">
+
+                <!-- EXISTING VOTER -->
+                <div class="col-md-6">
+
+                    <label class="fw-bold">Select Existing Voter</label>
+
+                    <select name="voter_id" class="form-control mb-3">
+                        <option value="">-- Choose Voter --</option>
+
+                        {% for v in voters %}
+                        <option value="{{ v.id }}">
+                            {{ v.first_name }} {{ v.last_name }} | {{ v.phone }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <!-- NEW VOTER -->
+                <div class="col-md-6">
+
+                    <label class="fw-bold">OR Register New Voter</label>
+
+                    <input type="text" name="first_name" class="form-control mb-2" placeholder="First Name">
+                    <input type="text" name="phone" class="form-control mb-2" placeholder="Phone Number">
+
+                    <small class="text-muted">
+                        If voter is not in list, add here
+                    </small>
+
+                </div>
+
+            </div>
+
+            <button class="btn btn-success w-100 mt-3">
+                ✔ Mark Attendance / Register Voter
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- ================= ATTENDANCE LIST ================= -->
+    <div class="card p-3 shadow-sm">
+
+        <h5>✅ Attendance List</h5>
+
+        <table class="table table-hover mt-3">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for a in attendances %}
+            <tr>
+
+                <td>
+                    {% if a.voter %}
+                        {{ a.voter.first_name }} {{ a.voter.last_name }}
+                    {% else %}
+                        {{ a.user.first_name }} {{ a.user.last_name }}
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if a.voter %}
+                        {{ a.voter.phone }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+
+                <td>
+                    <span class="badge bg-primary">{{ a.role_type }}</span>
+                </td>
+
+                <td>
+                    {% if a.status == "present" %}
+                        <span class="badge bg-success">Present</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ a.status }}</span>
+                    {% endif %}
+                </td>
+
+            </tr>
+
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center text-muted">
+                    No attendance recorded yet
+                </td>
+            </tr>
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- ================= SMALL IMPROVEMENT (AUTO DISMISS ALERTS) ================= -->
+<script>
+    setTimeout(function () {
+        let alerts = document.querySelectorAll('.alert');
+
+        alerts.forEach(function(alert) {
+            alert.classList.remove('show');
+            alert.classList.add('hide');
+        });
+
+    }, 3000);
+</script>
+
+{% endblock %}

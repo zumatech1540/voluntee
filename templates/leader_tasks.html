@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container my-5">
+
+    <h3>📊 Task Management</h3>
+
+    <table class="table table-bordered">
+
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Volunteer</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Due Date</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for task in tasks %}
+            <tr>
+                <td>{{ task.title }}</td>
+                <td>{{ task.assigned_to }}</td>
+                <td>{{ task.priority }}</td>
+
+                <td>
+                    {% if task.status == "pending" %}
+                        <span class="text-warning">Pending</span>
+                    {% elif task.status == "in_progress" %}
+                        <span class="text-primary">In Progress</span>
+                    {% else %}
+                        <span class="text-success">Completed</span>
+                    {% endif %}
+                </td>
+
+                <td>{{ task.due_date }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">No tasks yet</td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

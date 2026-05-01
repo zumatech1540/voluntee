@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<div class="d-flex justify-content-between mb-3">
+    <h3>Voter Database</h3>
+
+    <div>
+        <a href="{% url 'add_voter' %}" class="btn btn-primary">
+            + Add Voter
+        </a>
+
+        <a href="{% url 'whatsapp_voters' %}" class="btn btn-success">
+            WhatsApp Broadcast
+        </a>
+
+        <a href="{% url 'sms_broadcast' %}" class="btn btn-warning">
+           Bulk SMS
+        </a>
+    </div>
+</div>
+
+
+<!-- FILTERS -->
+<form method="GET" class="row mb-3">
+
+<div class="col-md-3">
+<select name="ward" class="form-control">
+<option value="">All Wards</option>
+{% for w in wards %}
+<option value="{{ w.id }}">{{ w.name }}</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="col-md-3">
+<select name="polling" class="form-control">
+<option value="">All Stations</option>
+{% for p in polling %}
+<option value="{{ p.id }}">{{ p.name }}</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="col-md-3">
+<select name="support" class="form-control">
+<option value="">All</option>
+<option value="supporter">Supporter</option>
+<option value="undecided">Undecided</option>
+<option value="opponent">Opponent</option>
+</select>
+</div>
+
+<div class="col-md-3">
+<button class="btn btn-dark w-100">Filter</button>
+</div>
+
+</form>
+
+
+<!-- COUNT -->
+<div class="alert alert-info">
+Total Voters: <strong>{{ voters.count }}</strong>
+</div>
+
+
+<table class="table table-bordered table-hover">
+
+<tr>
+<th>Name</th>
+<th>Phone</th>
+<th>Ward</th>
+<th>Polling</th>
+<th>Status</th>
+</tr>
+
+{% for v in voters %}
+<tr>
+
+<td>{{ v.first_name }} {{ v.last_name }}</td>
+
+<td>{{ v.phone }}</td>
+
+<td>{{ v.ward }}</td>
+
+<td>{{ v.polling_station }}</td>
+
+<td>
+    {% if v.support_status == "supporter" %}
+        <span class="badge bg-success">Supporter</span>
+    {% elif v.support_status == "undecided" %}
+        <span class="badge bg-warning">Undecided</span>
+    {% else %}
+        <span class="badge bg-danger">Opponent</span>
+    {% endif %}
+</td>
+
+</tr>
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endblock %}

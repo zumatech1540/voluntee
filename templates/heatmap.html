@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h3>Campaign Heat Map (Ward Intelligence)</h3>
+
+<table class="table table-bordered mt-3">
+
+<thead>
+<tr>
+<th>Ward</th>
+<th>Total Voters</th>
+<th>Supporters</th>
+<th>Undecided</th>
+<th>Opponents</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for w in data %}
+<tr>
+
+<td>{{ w.ward }}</td>
+<td>{{ w.total }}</td>
+<td>{{ w.supporters }}</td>
+<td>{{ w.undecided }}</td>
+<td>{{ w.opponents }}</td>
+
+<td>
+
+{% if w.status == "strong" %}
+<span class="badge bg-success">Strong Zone</span>
+
+{% elif w.status == "undecided" %}
+<span class="badge bg-warning">Undecided Zone</span>
+
+{% else %}
+<span class="badge bg-danger">Weak Zone</span>
+{% endif %}
+
+</td>
+
+</tr>
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}

@@ -14,7 +14,7 @@ urlpatterns = [
     path('login/', account_views.login_view, name='login'),
     path('logout/', account_views.logout_view, name='logout'),
     path('register/', account_views.register_view, name='register'),
-    path('dashboard/', account_views.dashboard, name='dashboard'),
+    path('leader/dashboard/', account_views.leader_dashboard, name='leader_dashboard'),
 
     # ACCOUNTS APP
     path('accounts/', include('accounts.urls')),

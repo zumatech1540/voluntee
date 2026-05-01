@@ -1,11 +1,21 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="container my-5" style="max-width:700px;">
+<div class="container my-5" style="max-width:750px;">
 
-    <div class="card shadow-sm p-4">
+    <div class="card shadow-lg p-4">
 
+        <!-- ================= TITLE ================= -->
         <h3 class="mb-3">➕ Create Community Event</h3>
+
+        <!-- ================= MESSAGES ================= -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
 
         {% if error %}
             <div class="alert alert-danger">
@@ -13,42 +23,63 @@
             </div>
         {% endif %}
 
+        <!-- ================= FORM ================= -->
         <form method="POST" enctype="multipart/form-data">
+
             {% csrf_token %}
 
             <!-- TITLE -->
-            <label class="form-label">Event Title</label>
-            <input type="text" name="title" class="form-control mb-3" required>
+            <div class="mb-3">
+                <label class="form-label">Event Title</label>
+                <input type="text" name="title" class="form-control" required>
+            </div>
 
             <!-- DESCRIPTION -->
-            <label class="form-label">Event Description</label>
-            <textarea name="description" rows="4" class="form-control mb-3" required></textarea>
+            <div class="mb-3">
+                <label class="form-label">Event Description</label>
+                <textarea name="description" rows="4" class="form-control" required></textarea>
+            </div>
 
             <!-- LOCATION -->
-            <label class="form-label">Location</label>
-            <input type="text" name="location" class="form-control mb-3" required>
+            <div class="mb-3">
+                <label class="form-label">Location</label>
+                <input type="text" name="location" class="form-control" required>
+            </div>
 
             <!-- DATE -->
-            <label class="form-label">Event Date</label>
-            <input type="date" name="date" class="form-control mb-3" required>
+            <div class="mb-3">
+                <label class="form-label">Event Date</label>
+                <input type="date" name="date" class="form-control" required>
+            </div>
 
             <!-- IMAGE -->
-            <label class="form-label">Event Image</label>
-            <input type="file" name="image" class="form-control mb-3" id="imageInput">
+            <div class="mb-3">
+                <label class="form-label">Event Image</label>
+                <input type="file" name="image" class="form-control" id="imageInput">
+            </div>
 
             <!-- IMAGE PREVIEW -->
             <img id="preview"
-                 style="width:100%; display:none; margin-bottom:15px; border-radius:8px;"/>
+                 style="width:100%; display:none; margin-bottom:15px; border-radius:10px;"/>
 
             <!-- BUTTONS -->
             <div class="d-flex gap-2">
-                <button class="btn btn-success w-100">
+
+                <button type="submit"
+                        class="btn btn-success w-100"
+                        onclick="this.innerText='Creating...';">
+
                     Create Event
+
                 </button>
 
-                <a href="{% url 'events' %}" class="btn btn-secondary w-100">
+                <a href="{% url 'leader_dashboard' %}"
+                   class="btn btn-secondary w-100">
+
                     Cancel
+
                 </a>
+
             </div>
 
         </form>
@@ -57,15 +88,19 @@
 
 </div>
 
+<!-- ================= IMAGE PREVIEW SCRIPT ================= -->
 <script>
-document.getElementById("imageInput").onchange = function(evt){
-    const [file] = this.files;
-    if(file){
-        let preview = document.getElementById("preview");
+document.getElementById("imageInput").addEventListener("change", function(event) {
+
+    const file = event.target.files[0];
+
+    if (file) {
+        const preview = document.getElementById("preview");
         preview.src = URL.createObjectURL(file);
         preview.style.display = "block";
     }
-}
+
+});
 </script>
 
 {% endblock %}
