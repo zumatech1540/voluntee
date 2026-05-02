@@ -3,64 +3,57 @@ from accounts.models import County, Constituency, Ward, PollingStation
 
 
 class Command(BaseCommand):
-    help = "Seed Laikipia County data safely (no duplicates)"
+    help = "Seed Laikipia County location data"
 
     def handle(self, *args, **kwargs):
 
-        # ================= CLEAN DUPLICATES =================
-        County.objects.filter(name__icontains="Laikipia").delete()
-
         # ================= COUNTY =================
-        county = County.objects.create(name="Laikipia")
-
-        self.stdout.write(self.style.SUCCESS(f"Created County: {county.name}"))
+        county, _ = County.objects.get_or_create(name="Laikipia")
 
         # ================= CONSTITUENCIES =================
-        constituencies_data = [
-            "Laikipia East",
-            "Laikipia West",
-            "Laikipia North"
-        ]
+        east, _ = Constituency.objects.get_or_create(name="Laikipia East", county=county)
+        north, _ = Constituency.objects.get_or_create(name="Laikipia North", county=county)
+        west, _ = Constituency.objects.get_or_create(name="Laikipia West", county=county)
 
-        for c_name in constituencies_data:
+        # ================= EAST WARDS =================
+        nanyuki, _ = Ward.objects.get_or_create(name="Nanyuki", constituency=east)
+        tigithi, _ = Ward.objects.get_or_create(name="Tigithi", constituency=east)
+        thome, _ = Ward.objects.get_or_create(name="Thome", constituency=east)
 
-            constituency = Constituency.objects.create(
-                name=c_name,
-                county=county
-            )
+        # ================= NORTH WARDS =================
+        doldol, _ = Ward.objects.get_or_create(name="Doldol", constituency=north)
+        mairungi, _ = Ward.objects.get_or_create(name="Mairungi", constituency=north)
+        sosian, _ = Ward.objects.get_or_create(name="Sosian", constituency=north)
 
-            self.stdout.write(f"Constituency: {constituency.name}")
+        # ================= WEST WARDS =================
+        rumuruti, _ = Ward.objects.get_or_create(name="Rumuruti", constituency=west)
+        sipili, _ = Ward.objects.get_or_create(name="Sipili", constituency=west)
+        sabukia, _ = Ward.objects.get_or_create(name="Sabukia", constituency=west)
 
-            # ================= WARDS =================
-            wards_data = [
-                "Central Ward",
-                "North Ward",
-                "South Ward"
-            ]
+        # ================= POLLING STATIONS =================
 
-            for w_name in wards_data:
+        # EAST
+        PollingStation.objects.get_or_create(name="Nanyuki Primary School", ward=nanyuki)
+        PollingStation.objects.get_or_create(name="Nanyuki Secondary School", ward=nanyuki)
+        PollingStation.objects.get_or_create(name="Likii Market Center", ward=nanyuki)
 
-                ward = Ward.objects.create(
-                    name=f"{w_name} - {c_name}",
-                    constituency=constituency
-                )
+        PollingStation.objects.get_or_create(name="Tigithi Market", ward=tigithi)
+        PollingStation.objects.get_or_create(name="Kiamariga Centre", ward=tigithi)
 
-                self.stdout.write(f"  Ward: {ward.name}")
+        PollingStation.objects.get_or_create(name="Thome Community Hall", ward=thome)
 
-                # ================= POLLING STATIONS =================
-                polling_data = [
-                    "Primary School",
-                    "Chief Office",
-                    "Market Center"
-                ]
+        # NORTH
+        PollingStation.objects.get_or_create(name="Doldol Town Hall", ward=doldol)
+        PollingStation.objects.get_or_create(name="Olmoran Center", ward=doldol)
 
-                for p_name in polling_data:
+        PollingStation.objects.get_or_create(name="Mairungi Primary", ward=mairungi)
+        PollingStation.objects.get_or_create(name="Sosian Ranch Gate", ward=sosian)
 
-                    PollingStation.objects.create(
-                        name=f"{p_name} - {ward.name}",
-                        ward=ward
-                    )
+        # WEST
+        PollingStation.objects.get_or_create(name="Rumuruti Market", ward=rumuruti)
+        PollingStation.objects.get_or_create(name="Rumuruti Stadium", ward=rumuruti)
 
-                    self.stdout.write(f"    Polling: {p_name}")
+        PollingStation.objects.get_or_create(name="Sipili Market Center", ward=sipili)
+        PollingStation.objects.get_or_create(name="Sabukia Trading Center", ward=sabukia)
 
-        self.stdout.write(self.style.SUCCESS("✔ Laikipia data seeded successfully"))
+        self.stdout.write(self.style.SUCCESS("✅ Laikipia location data seeded successfully!"))
