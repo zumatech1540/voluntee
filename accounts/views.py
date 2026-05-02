@@ -6,19 +6,20 @@ from django.views.decorators.http import require_POST
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Count, Q, Sum
 from django.contrib import messages
+from django.utils import timezone
 
 import openpyxl
 import urllib.parse
 
 from .models import (
-    User, County, Constituency, Ward,
+    County, Constituency, Ward,
     PollingStation, Event, Donation, Voter,
     Attendance, Task
-
 )
-from projects.models import Project
-from django.utils import timezone
 
+from projects.models import Project
+
+User = get_user_model()
 
 # ================= HOME =================
 def home_page(request):
@@ -60,7 +61,7 @@ def contact_page(request):
 def register_view(request):
 
     county = County.objects.filter(name__icontains="Laikipia").first()
-    constituencies = Constituency.objects.filter(county=county)
+    constituencies = Constituency.objects.filter(county=county) if county else Constituency.objects.none()
 
     if request.method == "POST":
 
@@ -80,18 +81,20 @@ def register_view(request):
         password1 = request.POST.get("password1")
         password2 = request.POST.get("password2")
 
+        # ================= VALIDATION =================
+        if not email or not password1:
+            messages.error(request, "Email and password required")
+            return redirect("register")
+
         if password1 != password2:
-            return render(request, "register.html", {
-                "error": "Passwords do not match",
-                "constituencies": constituencies
-            })
+            messages.error(request, "Passwords do not match")
+            return redirect("register")
 
         if User.objects.filter(username=email).exists():
-            return render(request, "register.html", {
-                "error": "User already exists",
-                "constituencies": constituencies
-            })
+            messages.error(request, "User already exists")
+            return redirect("register")
 
+        # ================= CREATE USER =================
         user = User.objects.create_user(
             username=email,
             email=email,
@@ -103,9 +106,17 @@ def register_view(request):
         user.phone = phone
         user.role = role
         user.county = county
-        user.constituency_id = constituency_id or None
-        user.ward_id = ward_id or None
-        user.polling_station_id = polling_station_id or None
+
+        # SAFE FK ASSIGNMENT
+        if constituency_id and constituency_id.isdigit():
+            user.constituency_id = int(constituency_id)
+
+        if ward_id and ward_id.isdigit():
+            user.ward_id = int(ward_id)
+
+        if polling_station_id and polling_station_id.isdigit():
+            user.polling_station_id = int(polling_station_id)
+
         user.profession = profession
         user.other_profession = other_profession
 
@@ -113,15 +124,22 @@ def register_view(request):
 
         login(request, user)
 
-        if user.role == "leader":
-            return redirect("dashboard")
-
-        return redirect("home")
+        return redirect("leader_dashboard" if user.role == "leader" else "home")
 
     return render(request, "register.html", {
         "constituencies": constituencies
     })
 
+def load_wards(request):
+    constituency_id = request.GET.get("constituency")
+    wards = Ward.objects.filter(constituency_id=constituency_id)
+    return JsonResponse(list(wards.values("id", "name")), safe=False)
+
+
+def load_polling(request):
+    ward_id = request.GET.get("ward")
+    polling = PollingStation.objects.filter(ward_id=ward_id)
+    return JsonResponse(list(polling.values("id", "name")), safe=False)
 
 # ================= LOGIN =================
 def login_view(request):
