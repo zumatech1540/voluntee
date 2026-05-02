@@ -52,19 +52,18 @@ INSTALLED_APPS = [
 AFRICASTALKING_USERNAME = "sandbox"
 AFRICASTALKING_API_KEY = "your_api_key_here"
 
-# MIDDLEWARE
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
+'django.middleware.common.CommonMiddleware',
 
+'django.middleware.csrf.CsrfViewMiddleware',
+
+'django.contrib.auth.middleware.AuthenticationMiddleware',  # MUST BE HERE FIRST
+
+'django.contrib.messages.middleware.MessageMiddleware',
+
+'accounts.middleware.RoleAccessMiddleware',  # AFTER auth
+]
 
 ROOT_URLCONF = 'voluntee.urls'
 

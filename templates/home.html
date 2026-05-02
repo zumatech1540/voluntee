@@ -19,20 +19,41 @@
         </p>
 
         <div data-aos="fade-up" data-aos-delay="400">
-            {% if not request.user.is_authenticated %}
-                <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4 me-2">
-                    Join Now
-                </a>
-            {% else %}
-                <a href="{% url 'dashboard' %}" class="btn btn-warning btn-lg px-4">
-                    Go to Dashboard
-                </a>
-            {% endif %}
-        </div>
+
+    {% if not request.user.is_authenticated %}
+
+        <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4 me-2">
+            Join Now
+        </a>
+
+       
+
+    {% else %}
+
+        {% if request.user.is_superuser or request.user.role == "admin" %}
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-warning btn-lg px-4">
+                Go to Dashboard
+            </a>
+
+        {% elif request.user.role == "leader" %}
+            <a href="{% url 'leader_dashboard' %}" class="btn btn-warning btn-lg px-4">
+                Go to Dashboard
+            </a>
+
+        {% else %}
+            <a href="{% url 'volunteer_home' %}" class="btn btn-warning btn-lg px-4">
+                Go to Dashboard
+            </a>
+        {% endif %}
+
+    {% endif %}
+
+</div>
 
     </div>
 
 </div>
+
 
 <!-- ABOUT -->
 <div class="container my-5">

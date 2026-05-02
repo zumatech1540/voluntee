@@ -115,10 +115,28 @@
 
 <div class="container-fluid">
 
-    <a class="navbar-brand" href="{% url 'home' %}">
+    <!-- ================= BRAND (ROLE-AWARE DASHBOARD) ================= -->
+    <a class="navbar-brand"
+       href="{% if request.user.is_authenticated %}
+
+            {% if request.user.is_superuser %}
+                {% url 'admin_dashboard' %}
+
+            {% elif request.user.role == 'leader' %}
+                {% url 'leader_dashboard' %}
+
+            {% else %}
+                {% url 'volunteer_home' %}
+
+            {% endif %}
+
+       {% else %}
+            {% url 'home' %}
+       {% endif %}">
         🌍 Voluntee
     </a>
 
+    <!-- MOBILE TOGGLER -->
     <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu">
         <span class="navbar-toggler-icon"></span>
     </button>
@@ -127,42 +145,56 @@
 
         <ul class="navbar-nav ms-auto align-items-lg-center">
 
+            <!-- HOME -->
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
+                <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+                   href="{% url 'home' %}">
                     Home
                 </a>
             </li>
 
+            <!-- ABOUT -->
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}" href="{% url 'about' %}">
+                <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}"
+                   href="{% url 'about' %}">
                     About
                 </a>
             </li>
 
+            <!-- VOLUNTEERS -->
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'volunteers' %}active{% endif %}" href="{% url 'volunteers' %}">
+                <a class="nav-link {% if request.resolver_match.url_name == 'volunteers' %}active{% endif %}"
+                   href="{% url 'volunteers' %}">
                     Volunteers
                 </a>
             </li>
 
+            <!-- EVENTS -->
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'events' %}active{% endif %}" href="{% url 'events' %}">
+                <a class="nav-link {% if request.resolver_match.url_name == 'events' %}active{% endif %}"
+                   href="{% url 'events' %}">
                     Events
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'voter_list' %}active{% endif %}" href="{% url 'voter_list' %}">
-                    Voters
-                </a>
-            </li>
+          {% if request.user.is_authenticated %}
+    
+    {% if request.user.role == "leader" or request.user.is_superuser %}
 
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'heat_map' %}active{% endif %}" href="{% url 'heat_map' %}">
-                    Heat Map
-                </a>
-            </li>
+        <!-- VOTERS -->
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'voter_list' %}">Voters</a>
+        </li>
 
+        <!-- HEATMAP -->
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'heat_map' %}">Heat Map</a>
+        </li>
+
+    {% endif %}
+
+{% endif %}
+            <!-- ================= AUTH SECTION ================= -->
             {% if request.user.is_authenticated %}
 
             <li class="nav-item dropdown ms-lg-3">
@@ -173,19 +205,31 @@
 
                 <ul class="dropdown-menu dropdown-menu-end">
 
+                    <!-- ================= DASHBOARD LINKS ================= -->
                     {% if request.user.is_superuser %}
-                    <li>
-                        <a class="dropdown-item" href="{% url 'admin_dashboard' %}">
-                            Admin Dashboard
-                        </a>
-                    </li>
+
+                        <li>
+                            <a class="dropdown-item" href="{% url 'admin_dashboard' %}">
+                                Admin Dashboard
+                            </a>
+                        </li>
 
                     {% elif request.user.role == "leader" %}
-                    <li>
-                        <a class="dropdown-item" href="{% url 'leader_dashboard' %}">
-                            Leader Dashboard
-                        </a>
-                    </li>
+
+                        <li>
+                            <a class="dropdown-item" href="{% url 'leader_dashboard' %}">
+                                Leader Dashboard
+                            </a>
+                        </li>
+
+                    {% else %}
+
+                        <li>
+                            <a class="dropdown-item" href="{% url 'volunteer_home' %}">
+                                My Tasks Dashboard
+                            </a>
+                        </li>
+
                     {% endif %}
 
                     <li><hr class="dropdown-divider"></li>
@@ -202,12 +246,14 @@
 
             {% else %}
 
+            <!-- LOGIN -->
             <li class="nav-item ms-lg-3">
                 <a class="btn btn-light btn-sm px-3" href="{% url 'login' %}">
                     Login
                 </a>
             </li>
 
+            <!-- REGISTER -->
             <li class="nav-item ms-lg-2">
                 <a class="btn btn-success btn-sm px-3" href="{% url 'register' %}">
                     Register
@@ -244,14 +290,28 @@
             </div>
 
             <div class="col-md-4">
-                <h5>Quick Links</h5>
+    <h5>Quick Links</h5>
 
-                <a class="footer-link" href="/">Home</a>
-                <a class="footer-link" href="/events/">Events</a>
-                <a class="footer-link" href="/volunteers/">Volunteers</a>
-                <a class="footer-link" href="/contact/">Contact</a>
+    <!-- COMMON LINKS -->
+    <a class="footer-link" href="{% url 'home' %}">Home</a>
+    <a class="footer-link" href="{% url 'events' %}">Events</a>
+    <a class="footer-link" href="{% url 'volunteers' %}">Volunteers</a>
 
-            </div>
+    <!-- ROLE-BASED LINKS -->
+    {% if request.user.is_authenticated %}
+
+        {% if request.user.role == "leader" or request.user.is_superuser %}
+            <a class="footer-link" href="{% url 'voter_list' %}">Voters</a>
+            <a class="footer-link" href="{% url 'heat_map' %}">Heat Map</a>
+        {% else %}
+            <a class="footer-link" href="{% url 'contact' %}">Contact</a>
+        {% endif %}
+
+    {% else %}
+        <a class="footer-link" href="{% url 'contact' %}">Contact</a>
+    {% endif %}
+
+</div>
 
             <div class="col-md-4">
                 <h5>Social</h5>

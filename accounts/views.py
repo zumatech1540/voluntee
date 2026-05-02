@@ -7,7 +7,9 @@ from django.http import JsonResponse, HttpResponse
 from django.db.models import Count, Q, Sum
 from django.contrib import messages
 from django.utils import timezone
-
+from accounts.utils.permissions import volunteer_required
+from django.contrib.auth.decorators import login_required
+from accounts.utils.sms import send_sms
 import openpyxl
 import urllib.parse
 
@@ -15,6 +17,12 @@ from .models import (
     County, Constituency, Ward,
     PollingStation, Event, Donation, Voter,
     Attendance, Task
+)
+
+from accounts.utils.permissions import (
+    admin_required,
+    leader_required,
+    volunteer_required
 )
 
 from projects.models import Project
@@ -57,7 +65,36 @@ def contact_page(request):
     return render(request, "contact.html")
 
 
+def is_admin(user):
+    return user.is_authenticated and (user.is_superuser or user.role == "admin")
+
+def is_leader(user):
+    return user.is_authenticated and user.role == "leader"
+
+def is_volunteer(user):
+    return user.is_authenticated and user.role == "volunteer"
+
+    from accounts.utils.permissions import admin_required
+
+@admin_required
+def admin_dashboard(request):
+    ...
+
+from accounts.utils.permissions import leader_required
+
+@leader_required
+def leader_dashboard(request):
+    ...
+    from accounts.utils.permissions import volunteer_required
+
+@volunteer_required
+def volunteer_home(request):
+    ...
+
+    
 # ================= REGISTER =================
+
+
 def register_view(request):
 
     county = County.objects.filter(name__icontains="Laikipia").first()
@@ -69,7 +106,6 @@ def register_view(request):
         last_name = request.POST.get("last_name")
         email = request.POST.get("email")
         phone = request.POST.get("phone")
-        role = request.POST.get("role")
 
         constituency_id = request.POST.get("constituency")
         ward_id = request.POST.get("ward")
@@ -83,7 +119,7 @@ def register_view(request):
 
         # ================= VALIDATION =================
         if not email or not password1:
-            messages.error(request, "Email and password required")
+            messages.error(request, "Email and password are required")
             return redirect("register")
 
         if password1 != password2:
@@ -103,11 +139,13 @@ def register_view(request):
             last_name=last_name
         )
 
+        # ================= SYSTEM-ENFORCED ROLE =================
+        user.role = "volunteer"   # ALWAYS DEFAULT
+
+        # ================= PROFILE DATA =================
         user.phone = phone
-        user.role = role
         user.county = county
 
-        # SAFE FK ASSIGNMENT
         if constituency_id and constituency_id.isdigit():
             user.constituency_id = int(constituency_id)
 
@@ -124,24 +162,17 @@ def register_view(request):
 
         login(request, user)
 
-        return redirect("leader_dashboard" if user.role == "leader" else "home")
+        # ================= REDIRECT =================
+        return redirect("volunteer_home")   # 🔥 FIXED (not home)
 
     return render(request, "register.html", {
         "constituencies": constituencies
     })
 
-def load_wards(request):
-    constituency_id = request.GET.get("constituency")
-    wards = Ward.objects.filter(constituency_id=constituency_id)
-    return JsonResponse(list(wards.values("id", "name")), safe=False)
-
-
-def load_polling(request):
-    ward_id = request.GET.get("ward")
-    polling = PollingStation.objects.filter(ward_id=ward_id)
-    return JsonResponse(list(polling.values("id", "name")), safe=False)
 
 # ================= LOGIN =================
+
+
 def login_view(request):
 
     if request.method == "POST":
@@ -153,28 +184,92 @@ def login_view(request):
 
         if user is None:
             try:
-                user_obj = User.objects.get(email=email_or_username)
+                user_obj = get_user_model().objects.get(email=email_or_username)
                 user = authenticate(request, username=user_obj.username, password=password)
-            except User.DoesNotExist:
+            except:
                 user = None
 
         if user:
+
             login(request, user)
+
+            # ================= ROLE ROUTING FIX =================
 
             if user.is_superuser:
                 return redirect("admin_dashboard")
 
-            if user.role == "leader":
+            elif user.role == "leader":
                 return redirect("leader_dashboard")
 
-            return redirect("home")
+            else:
+                return redirect("home")  # 🔥 IMPORTANT FIX
 
-        return render(request, "login.html", {
-            "error": "Wrong email/username or password"
-        })
+        return render(request, "login.html", {"error": "Invalid credentials"})
 
     return render(request, "login.html")
 
+# ================= dashboard_redirect =================
+
+
+@login_required
+def dashboard_redirect(request):
+
+    user = request.user
+    role = getattr(user, "role", "volunteer")
+
+    if user.is_superuser or role == "admin":
+        return redirect("admin_dashboard")
+
+    elif role == "leader":
+        return redirect("leader_dashboard")
+
+    else:
+        return redirect("volunteer_dashboard")
+
+# ================= home =================
+def home(request):
+
+    tasks = []
+
+    if request.user.is_authenticated:
+        tasks = Task.objects.filter(assigned_to=request.user)
+
+    return render(request, "home.html", {
+        "tasks": tasks
+    })
+# ================= volunteer_home =================
+@login_required
+def heat_map(request):
+
+    if not (request.user.role == "leader" or request.user.is_superuser):
+        return redirect("home")
+
+    ...
+# ================= volunteer_home =================
+@login_required
+def voter_list(request):
+
+    if not (request.user.role == "leader" or request.user.is_superuser):
+        return redirect("home")
+
+    voters = Voter.objects.all()
+# ================= volunteer_home =================
+@login_required
+def volunteer_home(request):
+
+    if not is_volunteer(request.user):
+        return redirect("home")
+
+    tasks = Task.objects.filter(assigned_to=request.user)
+
+    return render(request, "volunteer_home.html", {"tasks": tasks})
+
+# ================= complete_task =================
+def complete_task(request, id):
+    task = get_object_or_404(Task, id=id, user=request.user)
+    task.status = "completed"
+    task.save()
+    return redirect("volunteer_home")
 
 # ================= LOGOUT =================
 def logout_view(request):
@@ -190,16 +285,27 @@ def is_leader(user):
 def is_admin(user):
     return user.is_authenticated and user.is_superuser
 
+
+
+# ================= my_tasks=================
+def my_tasks(request):
+    tasks = Task.objects.filter(user=request.user)
+
+    return render(request, "my_tasks.html", {
+        "tasks": tasks
+    })
 # ================= dashboard =================
 
 
 
 @login_required
+@login_required
 def leader_dashboard(request):
 
-    # ================= ACCESS CONTROL =================
-    if request.user.role != "leader" and not request.user.is_superuser:
+    # SAFE ACCESS CONTROL
+    if not (is_leader(request.user) or request.user.is_superuser):
         return redirect("home")
+
 
     # ================= PROJECTS =================
     projects = Project.objects.all().order_by('-id')
@@ -297,12 +403,13 @@ def leader_dashboard(request):
 # ================= admin_dashboard =================
 
 
-
 @login_required
 def admin_dashboard(request):
 
     if not request.user.is_superuser:
         return redirect("home")
+
+    
 
     events = Event.objects.all().order_by('-id')
     members = User.objects.all().order_by('-id')
@@ -372,7 +479,7 @@ def events_page(request):
     if request.user.is_superuser:
         events = Event.objects.all().order_by("-id")
 
-    elif request.user.is_authenticated and request.user.role == "leader":
+    elif request.user.is_authenticated and is_leader(request.user):
         events = Event.objects.filter(created_by=request.user).order_by("-id")
 
     else:
@@ -389,10 +496,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 
 @login_required
+@login_required
 def create_event(request):
 
-    # ✅ ALLOW SUPERUSER OR LEADER
-    if not (request.user.is_superuser or request.user.role == "leader"):
+    if not (request.user.is_superuser or is_leader(request.user)):
         return redirect("events")
 
     if request.method == "POST":
@@ -408,7 +515,6 @@ def create_event(request):
         )
 
         messages.success(request, "Event created successfully")
-
         return redirect("events")
 
     return render(request, "create_event.html")
@@ -559,53 +665,93 @@ def admin_events_review(request):
     })
 
 
+# ================= contact_page =================
+
+
+def contact_page(request):
+
+    if request.method == "POST":
+
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        subject = request.POST.get("subject")
+        message = request.POST.get("message")
+
+        # BASIC VALIDATION
+        if not name or not email or not message:
+            messages.error(request, "Please fill all required fields")
+            return redirect("contact")
+
+        # 👉 OPTION 1: JUST SHOW SUCCESS (for now)
+        # (Later we can save to DB or send email)
+
+        print("NEW CONTACT MESSAGE:")
+        print(name, email, subject, message)
+
+        messages.success(request, "Your message has been sent successfully!")
+
+        return redirect("contact")
+
+    return render(request, "contact.html")
+
 # ================= assign_task =================
 from django.contrib import messages
 from django.utils import timezone
 from datetime import date
 
+from django.contrib import messages
 @login_required
 def assign_task(request):
 
-    # allow leader OR admin
-    if not (request.user.role == "leader" or request.user.is_superuser):
+    # Only admin or leader
+    if not (request.user.is_superuser or request.user.role == "leader"):
         return redirect("home")
 
-    users = User.objects.filter(is_superuser=False)
+    # ================= USER FILTER =================
+    if request.user.is_superuser:
+        # admin sees both
+        leaders = User.objects.filter(role="leader")
+        volunteers = User.objects.filter(role="volunteer")
+    else:
+        # leader sees ONLY volunteers
+        leaders = User.objects.none()
+        volunteers = User.objects.filter(role="volunteer")
+
     events = Event.objects.all()
 
     if request.method == "POST":
 
-        title = request.POST.get("title")
-        description = request.POST.get("description")
-        assigned_to = request.POST.get("assigned_to")
-        event = request.POST.get("event")
-        priority = request.POST.get("priority")
-        due_date = request.POST.get("due_date")
+        user_ids = request.POST.getlist("assigned_to")
 
-        # ❌ prevent past dates
-        from datetime import date
-        if due_date:
-            selected_date = date.fromisoformat(due_date)
-            if selected_date < date.today():
-                messages.error(request, "❌ Cannot assign past date")
-                return redirect("assign_task")
+        if not user_ids:
+            messages.error(request, "Select at least one user")
+            return redirect("assign_task")
 
-        Task.objects.create(
-            title=title,
-            description=description,
-            assigned_to_id=assigned_to,
-            assigned_by=request.user,
-            event_id=event if event else None,
-            priority=priority,
-            due_date=due_date if due_date else None,
-        )
+        for uid in user_ids:
 
-        messages.success(request, "✅ Task assigned successfully")
+            user = User.objects.get(id=uid)
+
+            # 🚨 SECURITY CHECK (VERY IMPORTANT)
+            if request.user.role == "leader" and user.role != "volunteer":
+                continue  # skip invalid assignment
+
+            Task.objects.create(
+                title=request.POST.get("title"),
+                description=request.POST.get("description"),
+                assigned_to=user,
+                assigned_by=request.user,
+                event_id=request.POST.get("event") or None,
+                priority=request.POST.get("priority"),
+                due_date=request.POST.get("due_date") or None,
+                status="pending"
+            )
+
+        messages.success(request, "Task assigned successfully")
         return redirect("assign_task")
 
     return render(request, "assign_task.html", {
-        "users": users,
+        "leaders": leaders,
+        "volunteers": volunteers,
         "events": events
     })
 # ================= my_tasks =================
@@ -788,7 +934,7 @@ def manage_users(request):
         "events": events
     })
 
-# ================= delete_user =================
+# ================= user_tasks_admin =================
 @login_required
 def user_tasks_admin(request, user_id):
 
@@ -797,11 +943,17 @@ def user_tasks_admin(request, user_id):
 
     user = get_object_or_404(User, id=user_id)
 
+    status = request.GET.get("status")  # filter
+
     tasks = user.tasks_assigned.all().order_by("-created_at")
+
+    if status in ["pending", "in_progress", "completed"]:
+        tasks = tasks.filter(status=status)
 
     return render(request, "admin_user_tasks.html", {
         "selected_user": user,
-        "tasks": tasks
+        "tasks": tasks,
+        "status": status
     })
 
 
@@ -850,7 +1002,7 @@ def volunteer_assignment(request):
 
         return redirect("volunteer_assignment")
 
-    return render(request, "admin/volunteer_assignment.html", {
+    return render(request, "volunteer_assignment.html", {
         "volunteers": volunteers,
         "wards": wards,
         "stations": stations

@@ -65,7 +65,7 @@ class User(AbstractUser):
     profession = models.CharField(max_length=20, choices=PROFESSION_CHOICES, blank=True, null=True)
     other_profession = models.CharField(max_length=255, blank=True, null=True)
 
-    # ================= VOLUNTEER MANAGEMENT (FIXED) =================
+    # ================= VOLUNTEER MANAGEMENT =================
     VOLUNTEER_ROLE_CHOICES = [
         ("mobilizer", "Mobilizer"),
         ("ward_coordinator", "Ward Coordinator"),
@@ -96,6 +96,24 @@ class User(AbstractUser):
     activity_score = models.IntegerField(default=0)
     events_attended = models.IntegerField(default=0)
 
+    # ================= 🔥 FIX ADDED (ROLE SAFETY) =================
+
+    @property
+    def safe_role(self):
+        """
+        Always return valid role (prevents crashes)
+        """
+        return self.role or "volunteer"
+
+    def save(self, *args, **kwargs):
+        """
+        Force default role if missing (prevents bad DB values)
+        """
+        if not self.role:
+            self.role = "volunteer"
+        super().save(*args, **kwargs)
+
+    # ================= STRING =================
     def __str__(self):
         name = f"{self.first_name} {self.last_name}".strip()
         return name if name else self.username
@@ -382,4 +400,10 @@ class Notification(models.Model):
 
     def __str__(self):
         return self.message
-
+# ================= ContactMessage =================
+class ContactMessage(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)

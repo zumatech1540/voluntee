@@ -21,7 +21,7 @@
         }
 
         .card {
-            width: 450px;
+            width: 460px;
             padding: 25px;
             border-radius: 15px;
             background: white;
@@ -42,26 +42,24 @@
 
     <h3 class="title">Create Account</h3>
 
-    {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
     {% endif %}
 
     <form method="POST">
         {% csrf_token %}
 
+        <!-- PERSONAL INFO -->
         <input type="text" name="first_name" class="form-control mb-2" placeholder="First Name" required>
         <input type="text" name="last_name" class="form-control mb-2" placeholder="Last Name" required>
         <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
         <input type="text" name="phone" class="form-control mb-2" placeholder="Phone Number" required>
 
-        <!-- ROLE -->
-        <select name="role" class="form-control mb-2" required>
-            <option value="">Select Role</option>
-            <option value="volunteer">Volunteer</option>
-            <option value="leader">Leader</option>
-        </select>
-
-        <!-- CONSTITUENCY -->
+        <!-- LOCATION -->
         <select name="constituency" id="constituency" class="form-control mb-2" required>
             <option value="">Select Constituency</option>
             {% for c in constituencies %}
@@ -69,12 +67,10 @@
             {% endfor %}
         </select>
 
-        <!-- WARD -->
         <select name="ward" id="ward" class="form-control mb-2" required disabled>
             <option value="">Select Ward</option>
         </select>
 
-        <!-- POLLING STATION -->
         <select name="polling_station" id="polling" class="form-control mb-2" required disabled>
             <option value="">Select Polling Station</option>
         </select>
@@ -96,6 +92,7 @@
                placeholder="Specify Profession"
                style="display:none;">
 
+        <!-- PASSWORD -->
         <input type="password" name="password1" class="form-control mb-2" placeholder="Password" required>
         <input type="password" name="password2" class="form-control mb-3" placeholder="Confirm Password" required>
 
@@ -104,7 +101,7 @@
 
     <p class="text-center mt-3">
         Already have an account?
-        <a href="/accounts/login/">Login</a>
+        <a href="{% url 'login' %}">Login</a>
     </p>
 
 </div>
@@ -112,7 +109,7 @@
 <script>
 $(document).ready(function () {
 
-    // PROFESSION
+    // ================= PROFESSION =================
     $("#profession").change(function () {
         if ($(this).val() === "other") {
             $("#other_profession").show();
@@ -129,14 +126,12 @@ $(document).ready(function () {
         $("#ward").prop("disabled", true);
         $("#polling").prop("disabled", true);
 
-        $("#ward").html('<option value="">Loading...</option>');
-        $("#polling").html('<option value="">Select Polling Station</option>');
+        $("#ward").html('<option>Loading...</option>');
+        $("#polling").html('<option>Select Polling Station</option>');
 
         $.ajax({
             url: "/accounts/ajax/load-wards/",
-            data: {
-                constituency: constituencyId
-            },
+            data: { constituency: constituencyId },
             success: function (data) {
 
                 $("#ward").html('<option value="">Select Ward</option>');
@@ -148,14 +143,9 @@ $(document).ready(function () {
                 });
 
                 $("#ward").prop("disabled", false);
-            },
-            error: function () {
-                alert("Error loading wards");
             }
         });
-
     });
-
 
     // ================= WARD → POLLING =================
     $("#ward").change(function () {
@@ -163,13 +153,11 @@ $(document).ready(function () {
         let wardId = $(this).val();
 
         $("#polling").prop("disabled", true);
-        $("#polling").html('<option value="">Loading...</option>');
+        $("#polling").html('<option>Loading...</option>');
 
         $.ajax({
             url: "/accounts/ajax/load-polling/",
-            data: {
-                ward: wardId
-            },
+            data: { ward: wardId },
             success: function (data) {
 
                 $("#polling").html('<option value="">Select Polling Station</option>');
@@ -181,12 +169,8 @@ $(document).ready(function () {
                 });
 
                 $("#polling").prop("disabled", false);
-            },
-            error: function () {
-                alert("Error loading polling stations");
             }
         });
-
     });
 
 });

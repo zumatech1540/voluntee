@@ -4,39 +4,61 @@
 
 <div class="container my-5">
 
-<h2 class="text-center mb-4">Contact Us</h2>
+    <h2 class="text-center mb-4">Contact Us</h2>
 
-<div class="row justify-content-center">
+    <!-- SUCCESS / ERROR MESSAGES -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} text-center">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
 
-<div class="col-md-6">
+    <div class="row justify-content-center">
 
-<form>
+        <div class="col-md-6">
 
-<input type="text"
-       class="form-control mb-3"
-       placeholder="Your Name">
+            <div class="card shadow p-4">
 
-<input type="email"
-       class="form-control mb-3"
-       placeholder="Email">
+                <form method="POST">
+                    {% csrf_token %}
 
-<input type="text"
-       class="form-control mb-3"
-       placeholder="Subject">
+                    <input type="text"
+                           name="name"
+                           class="form-control mb-3"
+                           placeholder="Your Name"
+                           required>
 
-<textarea class="form-control mb-3"
-          rows="5"
-          placeholder="Message"></textarea>
+                    <input type="email"
+                           name="email"
+                           class="form-control mb-3"
+                           placeholder="Email"
+                           required>
 
-<button class="btn btn-primary w-100">
-Send Message
-</button>
+                    <input type="text"
+                           name="subject"
+                           class="form-control mb-3"
+                           placeholder="Subject"
+                           required>
 
-</form>
+                    <textarea name="message"
+                              class="form-control mb-3"
+                              rows="5"
+                              placeholder="Message"
+                              required></textarea>
 
-</div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        Send Message
+                    </button>
 
-</div>
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
 

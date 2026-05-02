@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Volunteer Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Simple styling -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+        }
+
+        header h2 {
+            margin: 0;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .task-card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .task-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .task-desc {
+            margin: 8px 0;
+            color: #555;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 13px;
+            color: white;
+        }
+
+        .pending {
+            background: orange;
+        }
+
+        .completed {
+            background: green;
+        }
+
+        .no-task {
+            background: #fff;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        .logout {
+            float: right;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h2>
+        Welcome, {{ request.user.first_name }}
+        <a href="{% url 'logout' %}" class="logout">Logout</a>
+    </h2>
+</header>
+
+<div class="container">
+
+    <h3>Your Assigned Tasks</h3>
+
+    {% if tasks %}
+        {% for task in tasks %}
+            <div class="task-card">
+
+                <div class="task-title">
+                    {{ task.title }}
+                </div>
+
+                <div class="task-desc">
+                    {{ task.description }}
+                </div>
+
+                <div>
+                    <strong>Status:</strong>
+                    {% if task.status == "completed" %}
+                        <span class="status completed">Completed</span>
+                    {% else %}
+                        <span class="status pending">Pending</span>
+                    {% endif %}
+                </div>
+
+                <br>
+
+                <!-- Optional: Mark Complete Button -->
+                {% if task.status != "completed" %}
+                    <form method="POST" action="{% url 'complete_task' task.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Mark as Completed</button>
+                    </form>
+                {% endif %}
+
+            </div>
+        {% endfor %}
+    {% else %}
+
+        <div class="no-task">
+            <h4>No tasks assigned yet</h4>
+            <p>Please check later or contact your leader.</p>
+        </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>

@@ -75,6 +75,8 @@ urlpatterns = [
     path('user-tasks/<int:user_id>/', views.user_tasks_admin, name='user_tasks_admin'),
     path('tasks/assign/<int:user_id>/', views.assign_task_admin, name='assign_task_admin'),
     path("tasks/assign/<int:id>/", views.assign_task_admin, name="assign_task_admin"),
+    path("volunteer-home/", views.volunteer_home, name="volunteer_home"),
+    path("complete-task/<int:id>/", views.complete_task, name="complete_task"),
     # ================= AJAX =================
     path('ajax/load-wards/', views.load_wards, name='load_wards'),
     path('ajax/load-polling/', views.load_polling, name='load_polling'),
