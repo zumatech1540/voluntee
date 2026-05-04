@@ -7,28 +7,30 @@ from django.http import JsonResponse, HttpResponse
 from django.db.models import Count, Q, Sum
 from django.contrib import messages
 from django.utils import timezone
-from accounts.utils.permissions import volunteer_required
-from django.contrib.auth.decorators import login_required
-from accounts.utils.sms import send_sms
+from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
+from .models import SMSLog
+
 import openpyxl
 import urllib.parse
+from datetime import date, timedelta
 
+# ================= MODELS =================
 from .models import (
-    County, Constituency, Ward,
-    PollingStation, Event, Donation, Voter,
-    Attendance, Task
-)
-
-from accounts.utils.permissions import (
-    admin_required,
-    leader_required,
-    volunteer_required
+    User, Task, TaskComment, PasswordResetOTP, SMSLog,
+    County, Constituency, Ward, PollingStation,
+    Event, Donation, Voter, Attendance
 )
 
 from projects.models import Project
 
-User = get_user_model()
+# ================= UTILITIES =================
+from accounts.utils.sms import send_sms, generate_otp
 
+# ================= PERMISSIONS =================
+from accounts.utils.permissions import (
+    leader_required, admin_required, volunteer_required
+)
 # ================= HOME =================
 def home_page(request):
     projects = Project.objects.all().order_by('-id')[:6]
@@ -163,7 +165,7 @@ def register_view(request):
         login(request, user)
 
         # ================= REDIRECT =================
-        return redirect("volunteer_home")   # 🔥 FIXED (not home)
+        return redirect("home")   # 🔥 FIXED (not home)
 
     return render(request, "register.html", {
         "constituencies": constituencies
@@ -171,7 +173,6 @@ def register_view(request):
 
 
 # ================= LOGIN =================
-
 
 def login_view(request):
 
@@ -296,16 +297,14 @@ def my_tasks(request):
     })
 # ================= dashboard =================
 
+@login_required
 
 
-@login_required
-@login_required
 def leader_dashboard(request):
 
-    # SAFE ACCESS CONTROL
+    # ================= ACCESS CONTROL =================
     if not (is_leader(request.user) or request.user.is_superuser):
         return redirect("home")
-
 
     # ================= PROJECTS =================
     projects = Project.objects.all().order_by('-id')
@@ -320,17 +319,58 @@ def leader_dashboard(request):
     pending_events = events.filter(approval_status="pending").count()
     approved_events = events.filter(approval_status="approved").count()
 
-    # ================= MEMBERS =================
+    # ================= USERS =================
     if request.user.is_superuser:
-        members = User.objects.all()
-        total_volunteers = User.objects.filter(role="volunteer").count()
-        total_leaders = User.objects.filter(role="leader").count()
+        volunteers = User.objects.filter(role="volunteer")
+        leaders = User.objects.filter(role="leader")
     else:
-        members = User.objects.filter(role="volunteer")
-        total_volunteers = members.count()
-        total_leaders = 1
+        volunteers = User.objects.filter(role="volunteer")
+        leaders = User.objects.filter(id=request.user.id)
 
-    # ================= VOTER ANALYTICS =================
+    total_volunteers = volunteers.count()
+    total_leaders = leaders.count()
+
+    # ================= TASK CONTROL CENTER =================
+    if request.user.is_superuser:
+        tasks = Task.objects.all()
+    else:
+        tasks = Task.objects.filter(assigned_by=request.user)
+
+    total_tasks = tasks.count()
+    pending_tasks = tasks.filter(status='pending').count()
+    in_progress_tasks = tasks.filter(status='in_progress').count()
+    completed_tasks = tasks.filter(status='completed').count()
+
+    # overdue tasks (SAFE FIX)
+    overdue_tasks = tasks.filter(
+        due_date__lt=date.today()
+    ).exclude(status='completed').count()
+
+    # ================= TASK PERFORMANCE (CHART READY) =================
+    volunteer_task_performance = (
+        Task.objects.values('assigned_to__first_name', 'assigned_to__last_name')
+        .annotate(
+            total_tasks=Count('id'),
+            completed=Count('id', filter=Q(status='completed')),
+            pending=Count('id', filter=Q(status='pending')),
+            in_progress=Count('id', filter=Q(status='in_progress')),
+        )
+        .order_by('-completed')
+    )
+
+    # ================= TASK STATUS DISTRIBUTION (FOR PIE CHART) =================
+    task_status_chart = {
+        "pending": pending_tasks,
+        "in_progress": in_progress_tasks,
+        "completed": completed_tasks
+    }
+
+    # ================= TASK PRIORITY ANALYTICS =================
+    priority_stats = tasks.values('priority').annotate(
+        total=Count('id')
+    )
+
+    # ================= VOTERS =================
     total_voters = Voter.objects.count()
 
     supporters = Voter.objects.filter(support_status='supporter').count()
@@ -349,41 +389,43 @@ def leader_dashboard(request):
         .order_by('-supporters')
     )
 
-    # ================= CONSTITUENCY ANALYSIS =================
-    constituency_analysis = (
-        Voter.objects.values('constituency__name')
-        .annotate(
-            total=Count('id'),
-            supporters=Count('id', filter=Q(support_status='supporter')),
-        )
-        .order_by('-supporters')
-    )
-
-    # ================= VOLUNTEER PERFORMANCE =================
-    volunteer_performance = (
-        Voter.objects.values('added_by__username')
-        .annotate(total_registered=Count('id'))
-        .order_by('-total_registered')
-    )
-
     # ================= NOTIFICATIONS =================
     notifications = [
-        "Leader dashboard loaded successfully",
-        "Monitor weak and strong wards",
-        "Assign tasks to volunteers"
+        "📊 Leader dashboard active",
+        "📌 Monitor task completion rates",
+        "⚠ Track overdue tasks",
+        "📍 Focus on weak wards",
+        "📈 Improve volunteer performance"
     ]
 
     # ================= RENDER =================
     return render(request, "dashboard.html", {
-        "projects": projects,
-        "events": events,
 
+        # PROJECTS
+        "projects": projects,
+
+        # EVENTS
+        "events": events,
         "total_events": total_events,
         "pending_events": pending_events,
         "approved_events": approved_events,
 
+        # USERS
         "total_volunteers": total_volunteers,
         "total_leaders": total_leaders,
+
+        # TASKS (CONTROL CENTER)
+        "tasks": tasks,
+        "total_tasks": total_tasks,
+        "pending_tasks": pending_tasks,
+        "in_progress_tasks": in_progress_tasks,
+        "completed_tasks": completed_tasks,
+        "overdue_tasks": overdue_tasks,
+
+        # CHART DATA
+        "task_status_chart": task_status_chart,
+        "priority_stats": priority_stats,
+        "volunteer_task_performance": volunteer_task_performance,
 
         # VOTERS
         "total_voters": total_voters,
@@ -393,12 +435,11 @@ def leader_dashboard(request):
 
         # ANALYTICS
         "ward_analysis": ward_analysis,
-        "constituency_analysis": constituency_analysis,
-        "volunteer_performance": volunteer_performance,
 
-        # NOTIFICATIONS
-        "notifications": notifications
+        # UI
+        "notifications": notifications,
     })
+
 
 # ================= admin_dashboard =================
 
@@ -406,11 +447,11 @@ def leader_dashboard(request):
 @login_required
 def admin_dashboard(request):
 
+    # ================= SECURITY =================
     if not request.user.is_superuser:
         return redirect("home")
 
-    
-
+    # ================= CORE DATA =================
     events = Event.objects.all().order_by('-id')
     members = User.objects.all().order_by('-id')
     donations = Donation.objects.all().order_by("-created_at")
@@ -426,30 +467,75 @@ def admin_dashboard(request):
     total_leaders = members.filter(role="leader").count()
     total_volunteers = members.filter(role="volunteer").count()
 
-    pending_events_count = events.filter(approval_status="pending").count()
-    approved_events_count = events.filter(approval_status="approved").count()
+    pending_events = events.filter(approval_status="pending").count()
+    approved_events = events.filter(approval_status="approved").count()
 
-    total_donations = donations.aggregate(Sum("amount"))["amount__sum"] or 0
+    total_donations = donations.aggregate(
+        total=Sum("amount")
+    )["total"] or 0
+
+    # ================= ACTIVITY INSIGHTS =================
+
+    top_volunteers = (
+        Voter.objects.values("added_by__first_name", "added_by__last_name")
+        .annotate(total=Count("id"))
+        .order_by("-total")[:5]
+    )
+
+    event_creators = (
+        Event.objects.values("created_by__first_name", "created_by__last_name")
+        .annotate(total=Count("id"))
+        .order_by("-total")[:5]
+    )
+
+    # ================= SYSTEM HEALTH =================
+    system_health = {
+        "event_completion_rate": round(
+            (approved_events / total_events) * 100, 2
+        ) if total_events else 0,
+
+        "volunteer_ratio": round(
+            (total_volunteers / total_members) * 100, 2
+        ) if total_members else 0,
+    }
+
+    # ================= NOTIFICATIONS =================
+    notifications = [
+        "System running normally",
+        "Check pending events",
+        "Monitor volunteer activity",
+        "Review donations"
+    ]
 
     return render(request, "admin_dashboard.html", {
+        # DATA
         "events": events,
         "members": members,
         "donations": donations,
 
-        # NEW STATS
+        # COUNTS
         "total_voters": total_voters,
         "total_attendance": total_attendance,
-
         "total_events": total_events,
         "total_members": total_members,
 
         "total_leaders": total_leaders,
         "total_volunteers": total_volunteers,
 
-        "pending_events": pending_events_count,
-        "approved_events": approved_events_count,
+        "pending_events": pending_events,
+        "approved_events": approved_events,
 
         "total_donations": total_donations,
+
+        # INSIGHTS
+        "top_volunteers": top_volunteers,
+        "event_creators": event_creators,
+
+        # HEALTH
+        "system_health": system_health,
+
+        # UI
+        "notifications": notifications,
     })
 
 # ================= donate =================
@@ -703,18 +789,12 @@ from django.contrib import messages
 @login_required
 def assign_task(request):
 
-    # Only admin or leader
     if not (request.user.is_superuser or request.user.role == "leader"):
         return redirect("home")
 
-    # ================= USER FILTER =================
     if request.user.is_superuser:
-        # admin sees both
-        leaders = User.objects.filter(role="leader")
         volunteers = User.objects.filter(role="volunteer")
     else:
-        # leader sees ONLY volunteers
-        leaders = User.objects.none()
         volunteers = User.objects.filter(role="volunteer")
 
     events = Event.objects.all()
@@ -724,18 +804,20 @@ def assign_task(request):
         user_ids = request.POST.getlist("assigned_to")
 
         if not user_ids:
-            messages.error(request, "Select at least one user")
+            messages.error(request, "Select at least one volunteer")
             return redirect("assign_task")
+
+        created_tasks = []
 
         for uid in user_ids:
 
-            user = User.objects.get(id=uid)
+            try:
+                user = User.objects.get(id=uid)
+            except User.DoesNotExist:
+                continue
 
-            # 🚨 SECURITY CHECK (VERY IMPORTANT)
-            if request.user.role == "leader" and user.role != "volunteer":
-                continue  # skip invalid assignment
-
-            Task.objects.create(
+            # create task
+            task = Task.objects.create(
                 title=request.POST.get("title"),
                 description=request.POST.get("description"),
                 assigned_to=user,
@@ -746,14 +828,21 @@ def assign_task(request):
                 status="pending"
             )
 
-        messages.success(request, "Task assigned successfully")
+            created_tasks.append(task)
+
+        messages.success(request, "Tasks assigned successfully")
+
+        # 👉 redirect to first task chat (SAFE)
+        if created_tasks:
+            return redirect("task_chat", created_tasks[0].id)
+
         return redirect("assign_task")
 
     return render(request, "assign_task.html", {
-        "leaders": leaders,
         "volunteers": volunteers,
         "events": events
     })
+
 # ================= my_tasks =================
 @login_required
 def my_tasks(request):
@@ -796,6 +885,90 @@ def leader_tasks(request):
     return render(request, "leader_tasks.html", {
         "tasks": tasks
     })
+
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from .models import Task
+
+# ================= complete_task =================
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+
+def complete_task(request, id):
+
+    task = get_object_or_404(Task, id=id, assigned_to=request.user)
+
+    if request.method == "POST":
+        task.status = "completed"
+        task.save()
+
+        messages.success(request, "Task marked as completed ✅")
+
+    return redirect("volunteer_home")
+
+# ================= task_feedback =================
+
+
+def task_feedback(request, id):
+
+    task = get_object_or_404(Task, id=id)
+
+    # 🔒 Only allowed users
+    if request.user not in [task.assigned_to, task.assigned_by] and not request.user.is_superuser:
+        messages.error(request, "Not allowed")
+        return redirect("dashboard")
+
+    if request.method == "POST":
+        feedback = request.POST.get("feedback")
+
+        task.feedback = feedback
+        task.feedback_by = request.user
+        task.feedback_date = timezone.now()
+        task.save()
+
+        messages.success(request, "Feedback submitted successfully ✅")
+        return redirect("dashboard")
+
+    return render(request, "task_feedback.html", {"task": task})
+
+# =================task_chat =================
+
+
+def task_chat(request, id):
+
+    task = get_object_or_404(Task, id=id)
+
+    # 🔒 SECURITY
+    if request.user not in [task.assigned_to, task.assigned_by] and not request.user.is_superuser:
+        messages.error(request, "Not allowed")
+        return redirect("dashboard")
+
+    if request.method == "POST":
+        message = request.POST.get("message")
+
+        if message:
+            TaskComment.objects.create(
+                task=task,
+                user=request.user,
+                message=message
+            )
+
+        return redirect("task_chat", id=task.id)
+
+    comments = task.comments.all().order_by("created_at")
+
+    return render(request, "task_chat.html", {
+        "task": task,
+        "comments": comments
+    })
+# ================= leader_charts =================
+def leader_charts(request):
+
+    if not (is_leader(request.user) or request.user.is_superuser):
+        return redirect("home")
+
+    return render(request, "leader_charts.html")
 
 # ================= EXPORT ATTENDEES =================
 @login_required
@@ -1464,6 +1637,8 @@ def whatsapp_voters(request):
     })
 
 # ================= sms_broadcast =================
+
+
 @login_required
 def sms_broadcast(request):
 
@@ -1474,46 +1649,118 @@ def sms_broadcast(request):
         message = request.POST.get("message")
         target = request.POST.get("target")
         ward_id = request.POST.get("ward")
+        phone = request.POST.get("phone")
 
-        voters = Voter.objects.all()
-
-        # FILTER
-        if target == "supporters":
-            voters = voters.filter(support_status="supporter")
-
-        elif target == "undecided":
-            voters = voters.filter(support_status="undecided")
-
-        elif target == "opponents":
-            voters = voters.filter(support_status="opponent")
-
-        if ward_id:
-            voters = voters.filter(ward_id=ward_id)
-
-        phones = [v.phone for v in voters if v.phone]
-
-        # FORMAT NUMBERS (IMPORTANT FOR KENYA)
         clean_numbers = []
 
-        for p in phones:
+        # ================= VALIDATION =================
+        if not message:
+            return render(request, "sms.html", {
+                "wards": wards,
+                "error": "Message cannot be empty"
+            })
+
+        # ================= SINGLE SMS =================
+        if phone:
+            p = phone.strip()
+
             if p.startswith("0"):
                 p = "+254" + p[1:]
             elif not p.startswith("+"):
                 p = "+254" + p
+
             clean_numbers.append(p)
 
-        # SEND REAL SMS
-        result = send_sms(clean_numbers, message)
+        # ================= BULK SMS =================
+        else:
+            voters = Voter.objects.all()
 
+            if target == "supporters":
+                voters = voters.filter(support_status="supporter")
+
+            elif target == "undecided":
+                voters = voters.filter(support_status="undecided")
+
+            elif target == "opponents":
+                voters = voters.filter(support_status="opponent")
+
+            if ward_id:
+                voters = voters.filter(ward_id=ward_id)
+
+            phones = [v.phone for v in voters if v.phone]
+
+            for p in phones:
+                if p.startswith("0"):
+                    p = "+254" + p[1:]
+                elif not p.startswith("+"):
+                    p = "+254" + p
+
+                clean_numbers.append(p)
+
+        # ================= REMOVE DUPLICATES =================
+        clean_numbers = list(set(clean_numbers))
+
+        # ================= SAFETY CHECK =================
+        if not clean_numbers:
+            return render(request, "sms.html", {
+                "wards": wards,
+                "error": "No valid phone numbers found"
+            })
+
+        # ================= SEND SMS =================
+        results = send_sms(clean_numbers, message)
+
+        # ================= STATUS SUMMARY =================
+        sent_count = sum(1 for r in results if r["status"] == "sent")
+        failed_count = sum(1 for r in results if r["status"] == "failed")
+
+        # ================= RESPONSE =================
         return render(request, "sms.html", {
             "wards": wards,
-            "success": f"SMS sent to {len(clean_numbers)} voters",
-            "result": result
+            "success": f"✅ Sent: {sent_count} | ❌ Failed: {failed_count}",
+            "results": results
         })
 
     return render(request, "sms.html", {
         "wards": wards
     })
+
+# ================= send_sms =================
+
+
+def send_sms(phone_numbers, message):
+
+    results = []
+
+    for number in phone_numbers:
+
+        # create initial log
+        log = SMSLog.objects.create(
+            phone=number,
+            message=message,
+            status="pending"
+        )
+
+        try:
+            # 🔥 SIMULATION (replace later with real API)
+            print(f"[SMS] Sending to {number}: {message}")
+
+            # mark success
+            log.status = "sent"
+            log.response = "Message sent successfully"
+
+        except Exception as e:
+            log.status = "failed"
+            log.response = str(e)
+
+        log.save()
+
+        results.append({
+            "phone": number,
+            "status": log.status
+        })
+
+    return results
 
 # ================= heat_map =================
 @login_required
@@ -1576,3 +1823,171 @@ def load_polling(request):
 
     polling = PollingStation.objects.filter(ward_id=ward_id)
     return JsonResponse(list(polling.values('id', 'name')), safe=False)
+
+
+
+# ================= request_otp =================
+
+
+
+# ================= REQUEST OTP =================
+def request_otp(request):
+
+    if request.method == "POST":
+        phone = request.POST.get("phone")
+
+        users = User.objects.filter(phone=phone)
+
+        if not users.exists():
+            messages.error(request, "Phone not found")
+            return redirect("request_otp")
+
+        if users.count() > 1:
+            messages.error(request, "Duplicate phone accounts found")
+            return redirect("request_otp")
+
+        user = users.first()
+
+        # RESEND LIMIT
+        last = PasswordResetOTP.objects.filter(user=user).last()
+        if last and (timezone.now() - last.created_at).seconds < 60:
+            messages.error(request, "Wait 60 seconds before resending OTP")
+            return redirect("request_otp")
+
+        otp = generate_otp()
+
+        obj = PasswordResetOTP(
+            user=user,
+            expires_at=timezone.now() + timedelta(minutes=5)
+        )
+        obj.set_otp(otp)
+        obj.save()
+
+        send_sms([phone], f"Your OTP is {otp}")
+
+        request.session["reset_user"] = user.id
+
+        messages.success(request, "OTP sent successfully")
+        return redirect("verify_otp")
+
+    return render(request, "request_otp.html")
+
+
+# ================= VERIFY OTP =================
+def verify_otp(request):
+
+    if request.method == "POST":
+        otp_input = request.POST.get("otp")
+        user_id = request.session.get("reset_user")
+
+        if not user_id:
+            messages.error(request, "Session expired")
+            return redirect("request_otp")
+
+        user = User.objects.get(id=user_id)
+
+        otp_record = PasswordResetOTP.objects.filter(
+            user=user,
+            is_used=False
+        ).last()
+
+        if not otp_record:
+            messages.error(request, "Invalid OTP request")
+            return redirect("request_otp")
+
+        if otp_record.expired():
+            messages.error(request, "OTP expired")
+            return redirect("request_otp")
+
+        if not otp_record.verify_otp(otp_input):
+            messages.error(request, "Invalid OTP")
+            return redirect("verify_otp")
+
+        otp_record.is_used = True
+        otp_record.save()
+
+        request.session["otp_verified"] = True
+
+        return redirect("reset_password")
+
+    return render(request, "verify_otp.html")
+
+
+# ================= RESET PASSWORD =================
+def reset_password(request):
+
+    if not request.session.get("otp_verified"):
+        return redirect("request_otp")
+
+    user_id = request.session.get("reset_user")
+    user = User.objects.get(id=user_id)
+
+    if request.method == "POST":
+        password = request.POST.get("password")
+        confirm = request.POST.get("confirm")
+
+        if password != confirm:
+            messages.error(request, "Passwords do not match")
+            return redirect("reset_password")
+
+        if len(password) < 8:
+            messages.error(request, "Password too weak (min 8 chars)")
+            return redirect("reset_password")
+
+        user.password = make_password(password)
+        user.save()
+
+        # AUTO LOGIN
+        login(request, user)
+
+        # CLEAN SESSION
+        request.session.flush()
+
+        messages.success(request, "Password reset successful")
+        return redirect("home")
+
+    return render(request, "reset_password.html")
+
+# ================= verify_otp =================
+def verify_otp(request):
+
+    user_id = request.session.get("reset_user")
+
+    if not user_id:
+        return redirect("login")
+
+    if request.method == "POST":
+        otp = request.POST.get("otp")
+
+        record = PasswordResetOTP.objects.filter(user_id=user_id).last()
+
+        if not record:
+            messages.error(request, "No OTP found")
+            return redirect("request_otp")
+
+        # ⛔ BLOCK IF TOO MANY ATTEMPTS
+        if record.attempts >= 5:
+            messages.error(request, "Too many attempts. Request new OTP")
+            return redirect("request_otp")
+
+        if not record.is_valid():
+            messages.error(request, "OTP expired")
+            return redirect("request_otp")
+
+        if record.check_otp(otp):
+            record.is_used = True
+            record.save()
+
+            request.session['otp_verified'] = True
+
+            return redirect("reset_password")
+
+        else:
+            record.attempts += 1
+            record.save()
+
+            messages.error(request, f"Invalid OTP ({record.attempts}/5)")
+
+    return render(request, "verify_otp.html")
+
+    

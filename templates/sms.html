@@ -2,107 +2,200 @@
 
 {% block content %}
 
-<div class="container mt-4">
+<div class="container-fluid px-3 px-md-4 mt-3">
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Bulk SMS Campaign</h3>
+    <!-- ================= TOP BAR ================= -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
 
-    <a href="{% url 'voter_list' %}" class="btn btn-secondary">
-        ← Back to Voters
-    </a>
+        <h4 class="mb-0">📩 SMS Campaign Center</h4>
+
+        
+
+    </div>
+
+    <!-- ================= ALERTS ================= -->
+    {% if success %}
+    <div class="alert alert-success">
+        {{ success }}
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <div class="alert alert-info">
+        Send SMS to <b>individual</b> or <b>bulk voters</b> using filters.
+    </div>
+
+    <!-- ================= FORM ================= -->
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- ================= MODE ================= -->
+        <div class="card p-3 shadow-sm mb-3">
+            <label class="fw-bold">Send Mode</label>
+            <select class="form-select mt-2" onchange="toggleMode(this.value)">
+                <option value="bulk">📢 Bulk SMS</option>
+                <option value="single">👤 Individual SMS</option>
+            </select>
+        </div>
+
+        <div class="row g-3">
+
+            <!-- ================= SINGLE MODE ================= -->
+            <div id="singleMode" class="col-12" style="display:none;">
+                <div class="card p-3 shadow-sm">
+
+                    <h6>👤 Send to Individual</h6>
+
+                    <input type="text"
+                           name="phone"
+                           class="form-control mt-2"
+                           placeholder="e.g. 0712345678 or 254712345678">
+
+                    <small class="text-muted mt-1">
+                        Enter any phone number manually
+                    </small>
+
+                </div>
+            </div>
+
+            <!-- ================= BULK MODE ================= -->
+            <div id="bulkMode" class="col-12">
+
+                <div class="row g-3">
+
+                    <div class="col-md-4 col-12">
+                        <label class="fw-bold">Target Group</label>
+                        <select name="target" class="form-select mt-1">
+                            <option value="all">All Voters</option>
+                            <option value="supporters">Supporters</option>
+                            <option value="undecided">Undecided</option>
+                            <option value="opponents">Opponents</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 col-12">
+                        <label class="fw-bold">Ward Filter</label>
+                        <select name="ward" class="form-select mt-1">
+                            <option value="">All Wards</option>
+                            {% for w in wards %}
+                            <option value="{{ w.id }}">{{ w.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- ================= QUICK MESSAGES ================= -->
+            <div class="col-md-4 col-12">
+                <label class="fw-bold">Quick Messages</label>
+
+                <select class="form-select mt-1" onchange="insertMessage(this.value)">
+                    <option value="">-- Select Template --</option>
+                    <option value="Rally tomorrow at 10AM. Come early and bring others.">
+                        Rally Reminder
+                    </option>
+                    <option value="Thank you for your support. Stay strong for the campaign.">
+                        Appreciation Message
+                    </option>
+                    <option value="Please mobilize your neighbors for today's meeting.">
+                        Mobilization Message
+                    </option>
+                </select>
+            </div>
+
+            <!-- ================= MESSAGE ================= -->
+            <div class="col-12">
+                <label class="fw-bold">SMS Message</label>
+                <textarea name="message"
+                          id="messageBox"
+                          class="form-control mt-1"
+                          rows="5"
+                          placeholder="Write your message here..."
+                          required></textarea>
+            </div>
+
+        </div>
+
+        <!-- ================= BUTTON ================= -->
+        <div class="mt-4">
+            <button class="btn btn-primary w-100 py-2">
+                🚀 Send SMS
+            </button>
+        </div>
+
+    </form>
+
+    <!-- ================= DELIVERY REPORT ================= -->
+    {% if results %}
+    <div class="card mt-4 shadow-sm">
+
+        <div class="card-header d-flex justify-content-between">
+            <b>📊 Delivery Report</b>
+            <span>Total: {{ results|length }}</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+
+                <thead>
+                    <tr>
+                        <th>Phone</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for r in results %}
+                    <tr>
+                        <td>{{ r.phone }}</td>
+
+                        <td>
+                            {% if r.status == "sent" %}
+                                <span class="badge bg-success">Sent</span>
+                            {% else %}
+                                <span class="badge bg-danger">Failed</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+        </div>
+
+    </div>
+    {% endif %}
+
 </div>
 
-
-<!-- SUCCESS MESSAGE -->
-{% if success %}
-<div class="alert alert-success">
-    {{ success }}
-</div>
-{% endif %}
-
-
-<!-- WARNING -->
-<div class="alert alert-info">
-    Send campaign messages to voters by category, ward, or polling station.
-</div>
-
-
-<form method="POST">
-{% csrf_token %}
-
-<div class="row">
-
-<!-- TARGET GROUP -->
-<div class="col-md-4">
-<label><b>Target Group</b></label>
-<select name="target" class="form-control" required>
-    <option value="all">All Voters</option>
-    <option value="supporters">Supporters</option>
-    <option value="undecided">Undecided Voters</option>
-    <option value="opponents">Opponents</option>
-</select>
-</div>
-
-
-<!-- WARD FILTER -->
-<div class="col-md-4">
-<label><b>Ward Filter</b></label>
-<select name="ward" class="form-control">
-    <option value="">All Wards</option>
-    {% for w in wards %}
-    <option value="{{ w.id }}">{{ w.name }}</option>
-    {% endfor %}
-</select>
-</div>
-
-
-<!-- QUICK ACTIONS -->
-<div class="col-md-4">
-<label><b>Quick Messages</b></label>
-
-<select class="form-control" onchange="insertMessage(this.value)">
-    <option value="">-- Select Template --</option>
-    <option value="Rally tomorrow at 10AM. Come early and bring others.">
-        Rally Reminder
-    </option>
-    <option value="Thank you for your support. Stay strong for the campaign.">
-        Appreciation Message
-    </option>
-    <option value="Please mobilize your neighbors for today's meeting.">
-        Mobilization Message
-    </option>
-</select>
-
-</div>
-
-
-<!-- MESSAGE -->
-<div class="col-md-12 mt-3">
-<label><b>SMS Message</b></label>
-<textarea name="message" id="messageBox" class="form-control" rows="6"
-placeholder="Write campaign message here..." required></textarea>
-</div>
-
-</div>
-
-
-<!-- BUTTON -->
-<button class="btn btn-primary mt-3">
-Send SMS Campaign
-</button>
-
-</form>
-
-</div>
-
-
-<!-- JS HELPERS -->
+<!-- ================= JS ================= -->
 <script>
+
 function insertMessage(text){
     if(text){
         document.getElementById("messageBox").value = text;
     }
 }
+
+function toggleMode(mode){
+    if(mode === "single"){
+        document.getElementById("singleMode").style.display = "block";
+        document.getElementById("bulkMode").style.display = "none";
+    } else {
+        document.getElementById("singleMode").style.display = "none";
+        document.getElementById("bulkMode").style.display = "block";
+    }
+}
+
 </script>
 
 {% endblock %}

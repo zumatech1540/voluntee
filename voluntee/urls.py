@@ -1,27 +1,11 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
-from accounts import views as account_views
-
+from accounts import views
 urlpatterns = [
     path('admin/', admin.site.urls),
-
-    # HOME
-    path('', account_views.home_page, name='home'),
-
-    # ADD THESE (IMPORTANT)
-    path('login/', account_views.login_view, name='login'),
-    path('logout/', account_views.logout_view, name='logout'),
-    path('register/', account_views.register_view, name='register'),
-    path('leader/dashboard/', account_views.leader_dashboard, name='leader_dashboard'),
-
-    # ACCOUNTS APP
     path('accounts/', include('accounts.urls')),
+    
 
-    # PROJECTS
-    path('projects/', include('projects.urls')),
+    path('', views.home, name='home'),  # ADD THIS
+
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

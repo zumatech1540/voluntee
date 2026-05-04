@@ -37,6 +37,8 @@ urlpatterns = [
     # ================= ADMIN =================
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path("campaign-dashboard/", admin_dashboard_view, name="campaign_dashboard"),
+    
+    path("dashboard/", views.dashboard_redirect, name="dashboard"),
 
     # ================= VOLUNTEER =================
     path("volunteer-assignment/", views.volunteer_assignment, name="volunteer_assignment"),
@@ -74,9 +76,13 @@ urlpatterns = [
     path("tasks/leader/", views.leader_tasks, name="leader_tasks"),
     path('user-tasks/<int:user_id>/', views.user_tasks_admin, name='user_tasks_admin'),
     path('tasks/assign/<int:user_id>/', views.assign_task_admin, name='assign_task_admin'),
-    path("tasks/assign/<int:id>/", views.assign_task_admin, name="assign_task_admin"),
     path("volunteer-home/", views.volunteer_home, name="volunteer_home"),
-    path("complete-task/<int:id>/", views.complete_task, name="complete_task"),
+    path('complete-task/<int:id>/', views.complete_task, name='complete_task'),
+    path('task-chat/<int:id>/', views.task_chat, name='task_chat'),
+    path("leader/charts/", views.leader_charts, name="leader_charts"),
+    path("otp/request/", views.request_otp, name="request_otp"),
+    path("otp/verify/", views.verify_otp, name="verify_otp"),
+    path("otp/reset/", views.reset_password, name="reset_password"),
     # ================= AJAX =================
     path('ajax/load-wards/', views.load_wards, name='load_wards'),
     path('ajax/load-polling/', views.load_polling, name='load_polling'),

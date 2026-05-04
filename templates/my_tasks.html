@@ -1,64 +1,51 @@
-{% extends 'base.html' %}
-{% block content %}
+{% for task in tasks %}
+<div class="col-md-4">
 
-<div class="container my-5">
+    <div class="card p-3 shadow-sm mb-3">
 
-    <h3>📋 My Tasks</h3>
+        <h5>{{ task.title }}</h5>
+        <p>{{ task.description }}</p>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-success">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
+        <p><strong>Priority:</strong> {{ task.priority }}</p>
 
-    <div class="row">
+        <p><strong>Status:</strong>
+            <span class="
+                {% if task.status == 'pending' %}text-warning
+                {% elif task.status == 'in_progress' %}text-primary
+                {% else %}text-success{% endif %}
+            ">
+                {{ task.status }}
+            </span>
+        </p>
 
-        {% for task in tasks %}
-        <div class="col-md-4">
+        <p><strong>Due:</strong> {{ task.due_date }}</p>
 
-            <div class="card p-3 shadow-sm mb-3">
+        <!-- ================= STATUS UPDATE ================= -->
+        <form method="POST" action="{% url 'update_task_status' task.id %}">
+            {% csrf_token %}
 
-                <h5>{{ task.title }}</h5>
+            <select name="status" class="form-control mb-2">
+                <option value="pending" {% if task.status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Completed</option>
+            </select>
 
-                <p>{{ task.description }}</p>
+            <button class="btn btn-sm btn-primary w-100 mb-2">
+                Update Status
+            </button>
+        </form>
 
-                <p><strong>Priority:</strong> {{ task.priority }}</p>
-                <p><strong>Status:</strong>
-                    <span class="
-                        {% if task.status == 'pending' %}text-warning
-                        {% elif task.status == 'in_progress' %}text-primary
-                        {% else %}text-success{% endif %}
-                    ">
-                        {{ task.status }}
-                    </span>
-                </p>
+        <!-- ================= CHAT ================= -->
+       {% if task.id %}
+    <a href="{% url 'task_chat' task.id %}"
+       class="btn btn-dark btn-sm w-100 mt-2">
+       💬 Open Chat
+    </a>
+{% endif %}
 
-                <p><strong>Due:</strong> {{ task.due_date }}</p>
-
-                <!-- STATUS UPDATE -->
-                <form method="POST" action="{% url 'update_task_status' task.id %}">
-                    {% csrf_token %}
-
-                    <select name="status" class="form-control mb-2">
-                        <option value="pending">Pending</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="completed">Completed</option>
-                    </select>
-
-                    <button class="btn btn-sm btn-primary w-100">
-                        Update Status
-                    </button>
-                </form>
-
-            </div>
-
-        </div>
-        {% empty %}
-            <p>No tasks assigned yet.</p>
-        {% endfor %}
+        
 
     </div>
 
 </div>
-
-{% endblock %}
+{% endfor %}

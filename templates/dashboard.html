@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-
 {% block content %}
 
 <div class="container-fluid">
@@ -22,30 +21,30 @@
     <!-- ================= QUICK ACTIONS ================= -->
     <div class="mb-4 d-flex gap-2 flex-wrap">
 
-        <a href="{% url 'register_voter' %}" class="btn btn-primary">
-            ➕ Add Voter
-        </a>
+    <a href="{% url 'register_voter' %}" class="btn btn-primary">
+        ➕ Add Voter
+    </a>
 
-        <a href="{% url 'create_event' %}" class="btn btn-info">
-            📅 Create Event
-        </a>
+    <a href="{% url 'create_event' %}" class="btn btn-info">
+        📅 Create Event
+    </a>
 
-        <a href="{% url 'assign_task' %}" class="btn btn-warning">
-                               🧑 Assign Task
-        </a>
+    <a href="{% url 'assign_task' %}" class="btn btn-warning">
+        🧑 Assign Task
+    </a>
 
-        <a href="#" class="btn btn-success">
-            📊 Reports
-        </a>
+    <a href="{% url 'voter_list' %}" class="btn btn-dark">
+        🗳 View Voters
+    </a>
 
-        <a href="{% url 'voter_list' %}" class="btn btn-dark">
-            🗳 View Voters
-        </a>
+    <!-- ✅ ADD THIS -->
+    <a href="{% url 'leader_charts' %}" class="btn btn-secondary">
+        📊 Analytics Charts
+    </a>
 
-    </div>
-
-    <!-- ================= EVENT STATS ================= -->
-    <div class="row mb-3">
+</div>
+    <!-- ================= STATS ================= -->
+    <div class="row mb-4">
 
         <div class="col-md-3">
             <div class="card p-3 text-center shadow-sm">
@@ -110,6 +109,45 @@
 
     </div>
 
+    <!-- ================= TASK CONTROL CENTER ================= -->
+    <div class="card p-3 shadow-sm mb-4">
+
+        <h4>🧑‍💼 Task Control Center</h4>
+
+        <div class="row">
+
+            <div class="col-md-3">
+                <div class="card p-2 text-center">
+                    <h6>Total Tasks</h6>
+                    <h3>{{ total_tasks }}</h3>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card p-2 text-center">
+                    <h6>Pending</h6>
+                    <h3 class="text-warning">{{ pending_tasks }}</h3>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card p-2 text-center">
+                    <h6>In Progress</h6>
+                    <h3 class="text-primary">{{ in_progress_tasks }}</h3>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card p-2 text-center">
+                    <h6>Completed</h6>
+                    <h3 class="text-success">{{ completed_tasks }}</h3>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
     <!-- ================= CHARTS ================= -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -124,8 +162,8 @@
 
         <div class="col-md-6">
             <div class="card p-3 shadow-sm">
-                <h5>🏘 Ward Strength</h5>
-                <canvas id="wardChart"></canvas>
+                <h5>📊 Task Status Overview</h5>
+                <canvas id="taskChart"></canvas>
             </div>
         </div>
 
@@ -158,7 +196,6 @@
                     <td>{{ w.supporters }}</td>
                     <td>{{ w.undecided }}</td>
                     <td>{{ w.opponents }}</td>
-
                     <td>
                         {% if w.supporters > w.undecided and w.supporters > w.opponents %}
                             <span class="text-success">Strong</span>
@@ -178,96 +215,57 @@
     <!-- ================= MAIN CONTENT ================= -->
     <div class="row">
 
-        <!-- ================= EVENTS ================= -->
+        <!-- EVENTS -->
         <div class="col-md-4">
-
             <div class="card p-3 shadow-sm">
-
                 <h5>📅 Recent Events</h5>
 
                 {% for e in events %}
                     <div class="border-bottom py-2">
-
                         <strong>{{ e.title }}</strong><br>
-
-                        <small>
-                            {{ e.date }} | {{ e.location }} |
-
-                            {% if e.approval_status == "pending" %}
-                                <span class="text-warning">Pending</span>
-                            {% elif e.approval_status == "approved" %}
-                                <span class="text-success">Approved</span>
-                            {% else %}
-                                <span class="text-danger">Rejected</span>
-                            {% endif %}
-                        </small>
-
-                        <p class="mb-0">{{ e.description|truncatechars:80 }}</p>
-
+                        <small>{{ e.date }} | {{ e.location }}</small>
+                        <p>{{ e.description|truncatechars:80 }}</p>
                     </div>
                 {% empty %}
                     <p>No events available</p>
                 {% endfor %}
 
             </div>
-
         </div>
 
-        <!-- ================= MEMBERS ================= -->
+        <!-- MEMBERS -->
         <div class="col-md-4">
-
             <div class="card p-3 shadow-sm">
-
                 <h5>👥 Members</h5>
 
                 <table class="table table-sm">
-
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Role</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {% for m in members %}
-                        <tr>
-                            <td>{{ m.first_name }} {{ m.last_name }}</td>
-                            <td>{{ m.role }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-
+                    {% for m in members %}
+                    <tr>
+                        <td>{{ m.first_name }} {{ m.last_name }}</td>
+                        <td>{{ m.role }}</td>
+                    </tr>
+                    {% endfor %}
                 </table>
 
             </div>
-
         </div>
 
-        <!-- ================= PROJECTS ================= -->
+        <!-- PROJECTS -->
         <div class="col-md-4">
-
             <div class="card p-3 shadow-sm">
-
                 <h5>📌 Projects</h5>
 
                 {% for project in projects %}
-
                     <div class="border-bottom py-2">
-
                         <strong>{{ project.title }}</strong><br>
                         <small>{{ project.location }}</small>
-
                         <p>{{ project.description|truncatechars:60 }}</p>
-
                     </div>
-
                 {% empty %}
-                    <p>No projects available</p>
+                    <p>No projects</p>
                 {% endfor %}
 
             </div>
-
         </div>
 
     </div>
@@ -277,6 +275,7 @@
 <!-- ================= CHART SCRIPT ================= -->
 <script>
 
+// VOTER CHART
 new Chart(document.getElementById('supportChart'), {
     type: 'pie',
     data: {
@@ -287,25 +286,18 @@ new Chart(document.getElementById('supportChart'), {
     }
 });
 
-const wardLabels = [
-    {% for w in ward_analysis %}
-        "{{ w.ward__name }}",
-    {% endfor %}
-];
-
-const wardData = [
-    {% for w in ward_analysis %}
-        {{ w.supporters }},
-    {% endfor %}
-];
-
-new Chart(document.getElementById('wardChart'), {
+// TASK CHART
+new Chart(document.getElementById('taskChart'), {
     type: 'bar',
     data: {
-        labels: wardLabels,
+        labels: ['Pending', 'In Progress', 'Completed'],
         datasets: [{
-            label: 'Supporters',
-            data: wardData
+            label: 'Tasks',
+            data: [
+                {{ pending_tasks }},
+                {{ in_progress_tasks }},
+                {{ completed_tasks }}
+            ]
         }]
     }
 });

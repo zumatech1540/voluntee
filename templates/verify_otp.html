@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-5 col-md-4">
+
+    <h4 class="text-center mb-3">Enter OTP</h4>
+
+    <!-- MESSAGES -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-info">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <input name="otp"
+               class="form-control mb-3 text-center"
+               placeholder="Enter 6-digit OTP"
+               maxlength="6"
+               required>
+
+        <button class="btn btn-success w-100">
+            Verify OTP
+        </button>
+    </form>
+
+    <!-- RESEND SECTION -->
+    <div class="text-center mt-3">
+
+        <p id="timer" class="text-muted small">
+            You can resend OTP after 60 seconds
+        </p>
+
+        <a href="{% url 'request_otp' %}" class="btn btn-link">
+            Resend OTP
+        </a>
+
+    </div>
+
+    <!-- BACK LINK -->
+    <div class="text-center mt-2">
+        <a href="{% url 'login' %}" class="text-decoration-none">
+            Back to Login
+        </a>
+    </div>
+
+</div>
+
+<!-- TIMER SCRIPT (UI ONLY) -->
+<script>
+let time = 60;
+let timerEl = document.getElementById("timer");
+
+let interval = setInterval(() => {
+    time--;
+    timerEl.innerText = "Resend OTP in " + time + "s";
+
+    if (time <= 0) {
+        clearInterval(interval);
+        timerEl.innerText = "You can now resend OTP";
+    }
+}, 1000);
+</script>
+
+{% endblock %}

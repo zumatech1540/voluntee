@@ -2,6 +2,16 @@ from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.conf import settings
+from django.db import models
+from django.utils import timezone
+import hashlib
+User = settings.AUTH_USER_MODEL
+
+
+from datetime import timedelta
+import hashlib
+import random
 
 
 # ================= LOCATION MODELS =================
@@ -334,21 +344,18 @@ class Task(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
 
-    # Assigned volunteer
     assigned_to = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='tasks_assigned'
     )
 
-    # Leader who created the task
     assigned_by = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='tasks_created'
     )
 
-    # Optional: link task to a specific event
     event = models.ForeignKey(
         'Event',
         on_delete=models.SET_NULL,
@@ -356,34 +363,61 @@ class Task(models.Model):
         blank=True
     )
 
-    # Task status
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default='pending'
     )
 
-    # Priority level
     priority = models.CharField(
         max_length=10,
         choices=PRIORITY_CHOICES,
         default='medium'
     )
 
-    # Deadline
     due_date = models.DateField(null=True, blank=True)
 
-    # Notes or feedback after completion
+    # 🔥 IMPROVED FEEDBACK SYSTEM
     feedback = models.TextField(blank=True, null=True)
 
-    # Timestamp
+    feedback_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='task_feedbacks'
+    )
+
+    feedback_date = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.title} → {self.assigned_to}"
 
-        
+# =================TaskComment=================
+class TaskComment(models.Model):
+
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name="comments"
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    message = models.TextField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user} → {self.task}"
+
+
 # ================= NOTIFICATIONS =================
 
 class Notification(models.Model):
@@ -407,3 +441,75 @@ class ContactMessage(models.Model):
     subject = models.CharField(max_length=200)
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+
+
+
+#================= PasswordResetOTP =================
+
+
+class PasswordResetOTP(models.Model):
+    user = models.ForeignKey("User", on_delete=models.CASCADE)
+    otp_hash = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    is_used = models.BooleanField(default=False)
+
+    def set_otp(self, raw_otp):
+        self.otp_hash = hashlib.sha256(raw_otp.encode()).hexdigest()
+
+    def verify_otp(self, raw_otp):
+        return self.otp_hash == hashlib.sha256(raw_otp.encode()).hexdigest()
+
+    def expired(self):
+        return timezone.now() > self.expires_at
+
+        
+#================= SMSLog =================
+
+
+
+class SMSLog(models.Model):
+
+    STATUS_CHOICES = (
+        ("pending", "Pending"),
+        ("sent", "Sent"),
+        ("failed", "Failed"),
+    )
+
+    # ================= RECIPIENT INFO =================
+    phone = models.CharField(max_length=20, db_index=True)
+
+    # ================= MESSAGE =================
+    message = models.TextField()
+
+    # ================= CAMPAIGN (IMPORTANT FOR GROUPING) =================
+    campaign_name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        db_index=True
+    )
+
+    # ================= STATUS =================
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="pending",
+        db_index=True
+    )
+
+    # ================= PROVIDER RESPONSE =================
+    response = models.TextField(blank=True, null=True)
+
+    # ================= TIMESTAMP =================
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.phone} - {self.status}"
+

@@ -93,6 +93,13 @@
         </div>
          <a href="{% url 'assign_task' %}" class="btn btn-primary btn-sm mb-1">
     ➕ Assign Task
+
+    {% if task.id %}
+    <a href="{% url 'task_chat' task.id %}"
+       class="btn btn-dark btn-sm w-100 mt-2">
+       💬 Open Chat
+    </a>
+{% endif %}
 </a>
 
         </div>

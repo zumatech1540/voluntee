@@ -1,21 +1,10 @@
 import random
 
-
-# ================= OTP GENERATOR =================
 def generate_otp():
     return str(random.randint(100000, 999999))
 
 
-# ================= SMS SENDER =================
 def send_sms(phone_numbers, message):
-    """
-    Mock SMS sender (safe version for development)
-
-    Later you can replace with:
-    - Africa's Talking
-    - Twilio
-    """
-
     results = []
 
     for number in phone_numbers:

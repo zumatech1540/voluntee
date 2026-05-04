@@ -2,55 +2,216 @@
 
 {% block content %}
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+.page-title {
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.card-box {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    transition: 0.3s;
+}
+
+.card-box:hover {
+    transform: translateY(-3px);
+}
+
+.strong { background: #dcfce7; }
+.medium { background: #fef9c3; }
+.weak { background: #fee2e2; }
+
+.progress {
+    height: 8px;
+}
+
+</style>
+
 <div class="container mt-4">
 
-<h3>Campaign Heat Map (Ward Intelligence)</h3>
+    <!-- TITLE -->
+    <h3 class="page-title">🔥 Campaign Heat Map Intelligence</h3>
 
-<table class="table table-bordered mt-3">
+    <!-- KPI ROW -->
+    <div class="row mb-4">
 
-<thead>
-<tr>
-<th>Ward</th>
-<th>Total Voters</th>
-<th>Supporters</th>
-<th>Undecided</th>
-<th>Opponents</th>
-<th>Status</th>
-</tr>
-</thead>
+        <div class="col-md-4">
+            <div class="card-box text-center">
+                <h5>Total Wards</h5>
+                <h3>{{ data|length }}</h3>
+            </div>
+        </div>
 
-<tbody>
+        <div class="col-md-4">
+            <div class="card-box text-center">
+                <h5>Total Supporters</h5>
+                <h3 class="text-success">
+                    {% for w in data %}{{ w.supporters|add:0 }}{% if not forloop.last %}+{% endif %}{% endfor %}
+                </h3>
+            </div>
+        </div>
 
-{% for w in data %}
-<tr>
+        <div class="col-md-4">
+            <div class="card-box text-center">
+                <h5>Total Opponents</h5>
+                <h3 class="text-danger">
+                    {% for w in data %}{{ w.opponents|add:0 }}{% if not forloop.last %}+{% endif %}{% endfor %}
+                </h3>
+            </div>
+        </div>
 
-<td>{{ w.ward }}</td>
-<td>{{ w.total }}</td>
-<td>{{ w.supporters }}</td>
-<td>{{ w.undecided }}</td>
-<td>{{ w.opponents }}</td>
+    </div>
 
-<td>
+    <!-- CHARTS -->
+    <div class="row mb-4">
 
-{% if w.status == "strong" %}
-<span class="badge bg-success">Strong Zone</span>
+        <div class="col-md-6">
+            <div class="card-box">
+                <h5>📊 Support Distribution</h5>
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
 
-{% elif w.status == "undecided" %}
-<span class="badge bg-warning">Undecided Zone</span>
+        <div class="col-md-6">
+            <div class="card-box">
+                <h5>📊 Ward Comparison</h5>
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
 
-{% else %}
-<span class="badge bg-danger">Weak Zone</span>
-{% endif %}
+    </div>
 
-</td>
+    <!-- TABLE -->
+    <div class="card-box">
 
-</tr>
-{% endfor %}
+        <h5 class="mb-3">📍 Ward Intelligence Grid</h5>
 
-</tbody>
+        <table class="table table-hover table-bordered">
 
-</table>
+            <thead class="table-dark">
+                <tr>
+                    <th>Ward</th>
+                    <th>Total</th>
+                    <th>Supporters</th>
+                    <th>Undecided</th>
+                    <th>Opponents</th>
+                    <th>Support Level</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for w in data %}
+
+                <tr class="
+                    {% if w.status == 'strong' %}strong
+                    {% elif w.status == 'undecided' %}medium
+                    {% else %}weak
+                    {% endif %}
+                ">
+
+                    <td><b>{{ w.ward }}</b></td>
+
+                    <td>{{ w.total }}</td>
+
+                    <td>
+                        {{ w.supporters }}
+                        <div class="progress mt-1">
+                            <div class="progress-bar bg-success"
+                                 style="width: {% widthratio w.supporters w.total 100 %}%">
+                            </div>
+                        </div>
+                    </td>
+
+                    <td>{{ w.undecided }}</td>
+                    <td>{{ w.opponents }}</td>
+
+                    <td>
+
+                        {% if w.status == "strong" %}
+                            <span class="badge bg-success">Strong Zone</span>
+
+                        {% elif w.status == "undecided" %}
+                            <span class="badge bg-warning text-dark">Medium Zone</span>
+
+                        {% else %}
+                            <span class="badge bg-danger">Weak Zone</span>
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
 
 </div>
+
+<!-- CHART SCRIPT -->
+<script>
+
+let labels = [
+    {% for w in data %}
+        "{{ w.ward }}",
+    {% endfor %}
+];
+
+let supporters = [
+    {% for w in data %}
+        {{ w.supporters }},
+    {% endfor %}
+];
+
+let opponents = [
+    {% for w in data %}
+        {{ w.opponents }},
+    {% endfor %}
+];
+
+new Chart(document.getElementById("barChart"), {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                label: "Supporters",
+                data: supporters,
+                backgroundColor: "#22c55e"
+            },
+            {
+                label: "Opponents",
+                data: opponents,
+                backgroundColor: "#ef4444"
+            }
+        ]
+    }
+});
+
+let totalSupport = supporters.reduce((a,b)=>a+b,0);
+let totalOpp = opponents.reduce((a,b)=>a+b,0);
+
+new Chart(document.getElementById("pieChart"), {
+    type: 'doughnut',
+    data: {
+        labels: ["Supporters", "Opponents"],
+        datasets: [{
+            data: [totalSupport, totalOpp],
+            backgroundColor: ["#22c55e", "#ef4444"]
+        }]
+    }
+});
+
+</script>
 
 {% endblock %}

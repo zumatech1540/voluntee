@@ -1,7 +1,8 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth import get_user_model
+
 from .models import (
-    User,
     County,
     Constituency,
     Ward,
@@ -11,9 +12,12 @@ from .models import (
     Voter
 )
 
+User = get_user_model()
+
+
 # ================= USER ADMIN =================
 @admin.register(User)
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(BaseUserAdmin):
 
     model = User
 
@@ -48,7 +52,7 @@ class CustomUserAdmin(UserAdmin):
 
     ordering = ("-id",)
 
-    fieldsets = UserAdmin.fieldsets + (
+    fieldsets = BaseUserAdmin.fieldsets + (
 
         ("Campaign Role", {
             "fields": (
@@ -84,7 +88,7 @@ class CustomUserAdmin(UserAdmin):
     )
 
 
-# ================= VOTER ADMIN (IMPORTANT) =================
+# ================= VOTER ADMIN =================
 @admin.register(Voter)
 class VoterAdmin(admin.ModelAdmin):
 
