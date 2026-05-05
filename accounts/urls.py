@@ -5,6 +5,7 @@ from .admin_views import admin_dashboard_view
 urlpatterns = [
 
     # ================= AUTH =================
+    path('', views.home, name='home'),  # ADD THIS if exists
     path('register/', views.register_view, name='register'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
@@ -37,7 +38,6 @@ urlpatterns = [
     # ================= ADMIN =================
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path("campaign-dashboard/", admin_dashboard_view, name="campaign_dashboard"),
-    
     path("dashboard/", views.dashboard_redirect, name="dashboard"),
 
     # ================= VOLUNTEER =================
@@ -69,20 +69,18 @@ urlpatterns = [
     path("make-volunteer/<int:id>/", views.make_volunteer, name="make_volunteer"),
     path("make-admin/<int:id>/", views.make_admin, name="make_admin"),
     path("remove-admin/<int:id>/", views.remove_admin, name="remove_admin"),
-    path("tasks/assign/", views.assign_task, name="assign_task"),
-    path("tasks/my/", views.my_tasks, name="my_tasks"),
+
+    # ================= TASKS =================
     path("tasks/", views.my_tasks, name="my_tasks"),
+    path("tasks/assign/", views.assign_task, name="assign_task"),
     path("tasks/update/<int:id>/", views.update_task_status, name="update_task_status"),
     path("tasks/leader/", views.leader_tasks, name="leader_tasks"),
-    path('user-tasks/<int:user_id>/', views.user_tasks_admin, name='user_tasks_admin'),
-    path('tasks/assign/<int:user_id>/', views.assign_task_admin, name='assign_task_admin'),
-    path("volunteer-home/", views.volunteer_home, name="volunteer_home"),
-    path('complete-task/<int:id>/', views.complete_task, name='complete_task'),
-    path('task-chat/<int:id>/', views.task_chat, name='task_chat'),
-    path("leader/charts/", views.leader_charts, name="leader_charts"),
+
+    # ================= OTP =================
     path("otp/request/", views.request_otp, name="request_otp"),
     path("otp/verify/", views.verify_otp, name="verify_otp"),
     path("otp/reset/", views.reset_password, name="reset_password"),
+
     # ================= AJAX =================
     path('ajax/load-wards/', views.load_wards, name='load_wards'),
     path('ajax/load-polling/', views.load_polling, name='load_polling'),
