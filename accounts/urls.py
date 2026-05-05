@@ -1,11 +1,13 @@
 from django.urls import path
 from . import views
 from .admin_views import admin_dashboard_view
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
 
     # ================= AUTH =================
-    path('', views.home, name='home'),  # ADD THIS if exists
+    path('', views.home_page, name='home'),
     path('register/', views.register_view, name='register'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
@@ -84,4 +86,8 @@ urlpatterns = [
     # ================= AJAX =================
     path('ajax/load-wards/', views.load_wards, name='load_wards'),
     path('ajax/load-polling/', views.load_polling, name='load_polling'),
+
 ]
+
+# MEDIA + STATIC (IMPORTANT FIX)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

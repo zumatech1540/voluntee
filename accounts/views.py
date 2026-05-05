@@ -11,6 +11,10 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
 from .models import SMSLog
 
+
+
+from .models import Ward, Voter
+
 import openpyxl
 import urllib.parse
 from datetime import date, timedelta
@@ -239,13 +243,49 @@ def home(request):
         "tasks": tasks
     })
 # ================= volunteer_home =================
+
+
 @login_required
 def heat_map(request):
 
+    # 🔒 access control
     if not (request.user.role == "leader" or request.user.is_superuser):
         return redirect("home")
 
-    ...
+    wards = Ward.objects.all()
+
+    data = []
+
+    for w in wards:
+
+        voters = Voter.objects.filter(ward=w)
+
+        total = voters.count()
+        supporters = voters.filter(support_status="supporter").count()
+        undecided = voters.filter(support_status="undecided").count()
+        opponents = voters.filter(support_status="opponent").count()
+
+        # status logic (matches your UI colors)
+        if supporters > opponents and supporters > undecided:
+            status = "strong"
+        elif undecided > supporters and undecided > opponents:
+            status = "undecided"
+        else:
+            status = "weak"
+
+        data.append({
+            "ward": w.name,
+            "total": total,
+            "supporters": supporters,
+            "undecided": undecided,
+            "opponents": opponents,
+            "status": status
+        })
+
+    return render(request, "heatmap.html", {
+        "data": data
+    })
+    
 # ================= volunteer_home =================
 @login_required
 def voter_list(request):
@@ -1762,45 +1802,6 @@ def send_sms(phone_numbers, message):
 
     return results
 
-# ================= heat_map =================
-@login_required
-def heat_map(request):
-
-    wards = Ward.objects.all()
-
-    data = []
-
-    for w in wards:
-
-        voters = Voter.objects.filter(ward=w)
-
-        total = voters.count()
-        supporters = voters.filter(support_status="supporter").count()
-        undecided = voters.filter(support_status="undecided").count()
-        opponents = voters.filter(support_status="opponent").count()
-
-        # Decide color logic
-        if supporters > opponents and supporters > undecided:
-            status = "strong"
-
-        elif undecided > supporters and undecided > opponents:
-            status = "undecided"
-
-        else:
-            status = "weak"
-
-        data.append({
-            "ward": w.name,
-            "total": total,
-            "supporters": supporters,
-            "undecided": undecided,
-            "opponents": opponents,
-            "status": status
-        })
-
-    return render(request, "heatmap.html", {
-        "data": data
-    })
 
 # ================= AJAX =================
 def load_wards(request):
@@ -1872,45 +1873,6 @@ def request_otp(request):
 
     return render(request, "request_otp.html")
 
-
-# ================= VERIFY OTP =================
-def verify_otp(request):
-
-    if request.method == "POST":
-        otp_input = request.POST.get("otp")
-        user_id = request.session.get("reset_user")
-
-        if not user_id:
-            messages.error(request, "Session expired")
-            return redirect("request_otp")
-
-        user = User.objects.get(id=user_id)
-
-        otp_record = PasswordResetOTP.objects.filter(
-            user=user,
-            is_used=False
-        ).last()
-
-        if not otp_record:
-            messages.error(request, "Invalid OTP request")
-            return redirect("request_otp")
-
-        if otp_record.expired():
-            messages.error(request, "OTP expired")
-            return redirect("request_otp")
-
-        if not otp_record.verify_otp(otp_input):
-            messages.error(request, "Invalid OTP")
-            return redirect("verify_otp")
-
-        otp_record.is_used = True
-        otp_record.save()
-
-        request.session["otp_verified"] = True
-
-        return redirect("reset_password")
-
-    return render(request, "verify_otp.html")
 
 
 # ================= RESET PASSWORD =================

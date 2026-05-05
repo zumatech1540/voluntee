@@ -53,16 +53,18 @@ AFRICASTALKING_USERNAME = "sandbox"
 AFRICASTALKING_API_KEY = "your_api_key_here"
 
 MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # 🔥 ADD THIS
+
     'django.contrib.sessions.middleware.SessionMiddleware',
-'django.middleware.common.CommonMiddleware',
+    'django.middleware.common.CommonMiddleware',
 
-'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
 
-'django.contrib.auth.middleware.AuthenticationMiddleware',  # MUST BE HERE FIRST
-
-'django.contrib.messages.middleware.MessageMiddleware',
-
-'accounts.middleware.RoleAccessMiddleware',  # AFTER auth
+    'accounts.middleware.RoleAccessMiddleware',
 ]
 
 
