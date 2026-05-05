@@ -154,7 +154,6 @@ class Event(models.Model):
     created_by = models.ForeignKey(
     settings.AUTH_USER_MODEL,
     on_delete=models.CASCADE,
-    related_name="created_events",
     null=True,
     blank=True
 )
@@ -217,12 +216,11 @@ class Attendance(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
 
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
-
+    settings.AUTH_USER_MODEL,
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True
+)
     voter = models.ForeignKey(
         "Voter",
         on_delete=models.SET_NULL,
@@ -351,10 +349,10 @@ class Task(models.Model):
     )
 
     assigned_by = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='tasks_created'
-    )
+    settings.AUTH_USER_MODEL,
+    on_delete=models.CASCADE,
+    related_name='tasks_created'
+)
 
     event = models.ForeignKey(
         'Event',
