@@ -13,6 +13,9 @@ from accounts.utils.permissions import admin_required, leader_required, voluntee
 from datetime import date, timedelta
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 from datetime import date
 import openpyxl
 import urllib.parse
@@ -309,10 +312,6 @@ def my_tasks(request):
     return render(request, "my_tasks.html", {
         "tasks": tasks
     })
-# ================= dashboard =================
-
-@login_required
-
 
 
 
@@ -575,11 +574,9 @@ def events_page(request):
 # ================= CREATE EVENT =================
 
 
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
 
-@login_required
+
+
 @login_required
 def create_event(request):
 
@@ -1122,7 +1119,7 @@ def user_tasks_admin(request, user_id):
 
     status = request.GET.get("status")  # filter
 
-    tasks = user.tasks_assigned.all().order_by("-created_at")
+    tasks = user.tasks_created.all()
 
     if status in ["pending", "in_progress", "completed"]:
         tasks = tasks.filter(status=status)
@@ -1228,7 +1225,7 @@ def volunteer_performance(request):
         return redirect("home")
 
     volunteers = User.objects.filter(role="volunteer").annotate(
-        total_tasks=Count('tasks_assigned')
+        total_tasks=Count('tasks_created')
     ).order_by('-total_tasks')
 
     return render(request, "volunteer_performance.html", {
@@ -1788,11 +1785,6 @@ def load_polling(request):
 
     polling = PollingStation.objects.filter(ward_id=ward_id)
     return JsonResponse(list(polling.values('id', 'name')), safe=False)
-
-
-
-# ================= request_otp =================
-
 
 
 # ================= REQUEST OTP =================
