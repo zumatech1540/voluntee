@@ -318,9 +318,11 @@ def my_tasks(request):
 @login_required
 def leader_dashboard(request):
 
-    # ================= ACCESS CONTROL =================
-    if not is_leader(request.user):
-        return redirect("home")
+    if not is_leader(request.user): return redirect("home")
+
+    from django.db.models import Count, Q
+    from datetime import date
+    from .models import Task, Voter, User, Event
 
     # ================= EVENTS =================
     if request.user.is_superuser:
@@ -356,7 +358,8 @@ def leader_dashboard(request):
 
     # ================= TASK PERFORMANCE =================
     task_performance = (
-        Task.objects.values('assigned_by__first_name', 'assigned_by__last_name')
+        Task.objects.exclude(assigned_by=None)
+        .values('assigned_by__first_name', 'assigned_by__last_name')
         .annotate(
             total_tasks=Count('id'),
             completed=Count('id', filter=Q(status='completed')),
@@ -366,21 +369,17 @@ def leader_dashboard(request):
         .order_by('-completed')
     )
 
-    # ================= TASK STATUS CHART =================
+    # ================= CHART =================
     task_status_chart = {
         "pending": pending_tasks,
         "in_progress": in_progress_tasks,
         "completed": completed_tasks
     }
 
-    # ================= PRIORITY ANALYTICS =================
-    priority_stats = tasks.values('priority').annotate(
-        total=Count('id')
-    )
+    priority_stats = tasks.values('priority').annotate(total=Count('id'))
 
     # ================= VOTERS =================
     total_voters = Voter.objects.count()
-
     supporters = Voter.objects.filter(support_status='supporter').count()
     undecided = Voter.objects.filter(support_status='undecided').count()
     opponents = Voter.objects.filter(support_status='opponent').count()
@@ -397,7 +396,6 @@ def leader_dashboard(request):
         .order_by('-supporters')
     )
 
-    # ================= NOTIFICATIONS =================
     notifications = [
         "📊 Leader dashboard active",
         "📌 Monitor task completion rates",
@@ -406,20 +404,15 @@ def leader_dashboard(request):
         "📈 Improve volunteer performance"
     ]
 
-    # ================= CONTEXT =================
-    context = {
-
-        # EVENTS
+    return render(request, "dashboard.html", {
         "events": events,
         "total_events": total_events,
         "pending_events": pending_events,
         "approved_events": approved_events,
 
-        # USERS
         "total_volunteers": total_volunteers,
         "total_leaders": total_leaders,
 
-        # TASKS
         "tasks": tasks,
         "total_tasks": total_tasks,
         "pending_tasks": pending_tasks,
@@ -427,26 +420,19 @@ def leader_dashboard(request):
         "completed_tasks": completed_tasks,
         "overdue_tasks": overdue_tasks,
 
-        # CHART DATA
         "task_status_chart": task_status_chart,
         "priority_stats": priority_stats,
         "task_performance": task_performance,
 
-        # VOTERS
         "total_voters": total_voters,
         "supporters": supporters,
         "undecided": undecided,
         "opponents": opponents,
 
-        # ANALYTICS
         "ward_analysis": ward_analysis,
-
-        # UI
         "notifications": notifications,
-    }
+    })
 
-    return render(request, "dashboard.html", context)
-    
 # ================= admin_dashboard =================
 
 
@@ -1030,6 +1016,9 @@ def manage_users(request):
         return redirect("home")
 
     from django.db.models import Count, Q
+    from django.contrib import messages
+    from django.shortcuts import get_object_or_404
+    from .models import Attendance, Voter
 
     # ================= USERS WITH TASK STATS =================
     users = User.objects.annotate(
@@ -1039,7 +1028,6 @@ def manage_users(request):
         in_progress_tasks=Count('tasks_created', filter=Q(tasks_created__status='in_progress')),
     ).order_by("-id")
 
-    # ================= LOOKUP DATA =================
     wards = Ward.objects.all()
     stations = PollingStation.objects.all()
     events = Event.objects.all()
@@ -1090,11 +1078,13 @@ def manage_users(request):
 
         event = get_object_or_404(Event, id=event_id)
 
+        names = voter_name.strip().split(" ", 1)
+
         voter = Voter.objects.create(
-            first_name=voter_name.strip(),
-            last_name="",
+            first_name=names[0],
+            last_name=names[1] if len(names) > 1 else "",
             phone=phone.strip(),
-            ward=request.user.ward if hasattr(request.user, "ward") else None,
+            ward=getattr(request.user, "ward", None),
             added_by=request.user
         )
 

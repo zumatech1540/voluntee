@@ -3,7 +3,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 import hashlib
-from datetime import timedelta
+from django.core.exceptions import ValidationError
 
 
 # ================= LOCATION MODELS =================
@@ -339,7 +339,7 @@ class Task(models.Model):
     assigned_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='tasks_created',
+        related_name='tasks_assigned',
         null=True,
         blank=True
     )
@@ -382,7 +382,7 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
-
+        
 # =================TaskComment=================
 class TaskComment(models.Model):
 
@@ -393,9 +393,9 @@ class TaskComment(models.Model):
     )
 
     user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE
-    )
+    settings.AUTH_USER_MODEL,
+    on_delete=models.CASCADE
+)
 
     message = models.TextField()
 
@@ -437,7 +437,10 @@ class ContactMessage(models.Model):
 
 
 class PasswordResetOTP(models.Model):
-    user = models.ForeignKey("User", on_delete=models.CASCADE)
+    user = models.ForeignKey(
+    settings.AUTH_USER_MODEL,
+    on_delete=models.CASCADE
+)
     otp_hash = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
