@@ -9,40 +9,24 @@ from django.contrib import messages
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
-from .models import SMSLog
-
-
-
-from .models import Ward, Voter
+from accounts.utils.permissions import admin_required, leader_required, volunteer_required
+from datetime import date, timedelta
 
 import openpyxl
 import urllib.parse
-from datetime import date, timedelta
 
-# ================= MODELS =================
+
 from .models import (
     User, Task, TaskComment, PasswordResetOTP, SMSLog,
     County, Constituency, Ward, PollingStation,
     Event, Donation, Voter, Attendance
 )
-
-from projects.models import Project
-
-# ================= UTILITIES =================
-from accounts.utils.sms import send_sms, generate_otp
-
-# ================= PERMISSIONS =================
-from accounts.utils.permissions import (
-    leader_required, admin_required, volunteer_required
-)
 # ================= HOME =================
+
+
+
 def home_page(request):
-    projects = Project.objects.all().order_by('-id')[:6]
-
-    return render(request, "home.html", {
-        "projects": projects
-    })
-
+    return render(request, "home.html")
 
 def about_page(request):
     return render(request, "about.html")
@@ -59,6 +43,7 @@ def volunteers_page(request):
 def gallery_page(request):
     return render(request, "gallery.html")
 
+
 def donation_page(request):
     return render(request, "donation.html")
 
@@ -70,33 +55,20 @@ def blogs_page(request):
 def contact_page(request):
     return render(request, "contact.html")
 
-
 def is_admin(user):
     return user.is_authenticated and (user.is_superuser or user.role == "admin")
+
 
 def is_leader(user):
     return user.is_authenticated and user.role == "leader"
 
+
 def is_volunteer(user):
     return user.is_authenticated and user.role == "volunteer"
 
-    from accounts.utils.permissions import admin_required
+def manage_users(request):
 
-@admin_required
-def admin_dashboard(request):
-    ...
-
-from accounts.utils.permissions import leader_required
-
-@leader_required
-def leader_dashboard(request):
-    ...
-    from accounts.utils.permissions import volunteer_required
-
-@volunteer_required
-def volunteer_home(request):
-    ...
-
+    wards = Ward.objects.all()
     
 # ================= REGISTER =================
 
@@ -340,14 +312,15 @@ def my_tasks(request):
 @login_required
 
 
+
+
+# ================= LEADER DASHBOARD =================
+@login_required
 def leader_dashboard(request):
 
     # ================= ACCESS CONTROL =================
-    if not (is_leader(request.user) or request.user.is_superuser):
+    if not is_leader(request.user):
         return redirect("home")
-
-    # ================= PROJECTS =================
-    projects = Project.objects.all().order_by('-id')
 
     # ================= EVENTS =================
     if request.user.is_superuser:
@@ -360,17 +333,13 @@ def leader_dashboard(request):
     approved_events = events.filter(approval_status="approved").count()
 
     # ================= USERS =================
-    if request.user.is_superuser:
-        volunteers = User.objects.filter(role="volunteer")
-        leaders = User.objects.filter(role="leader")
-    else:
-        volunteers = User.objects.filter(role="volunteer")
-        leaders = User.objects.filter(id=request.user.id)
+    volunteers = User.objects.filter(role="volunteer")
+    leaders = User.objects.filter(role="leader")
 
     total_volunteers = volunteers.count()
     total_leaders = leaders.count()
 
-    # ================= TASK CONTROL CENTER =================
+    # ================= TASKS =================
     if request.user.is_superuser:
         tasks = Task.objects.all()
     else:
@@ -381,14 +350,13 @@ def leader_dashboard(request):
     in_progress_tasks = tasks.filter(status='in_progress').count()
     completed_tasks = tasks.filter(status='completed').count()
 
-    # overdue tasks (SAFE FIX)
     overdue_tasks = tasks.filter(
         due_date__lt=date.today()
     ).exclude(status='completed').count()
 
-    # ================= TASK PERFORMANCE (CHART READY) =================
-    volunteer_task_performance = (
-        Task.objects.values('assigned_to__first_name', 'assigned_to__last_name')
+    # ================= TASK PERFORMANCE =================
+    task_performance = (
+        Task.objects.values('assigned_by__first_name', 'assigned_by__last_name')
         .annotate(
             total_tasks=Count('id'),
             completed=Count('id', filter=Q(status='completed')),
@@ -398,14 +366,14 @@ def leader_dashboard(request):
         .order_by('-completed')
     )
 
-    # ================= TASK STATUS DISTRIBUTION (FOR PIE CHART) =================
+    # ================= TASK STATUS CHART =================
     task_status_chart = {
         "pending": pending_tasks,
         "in_progress": in_progress_tasks,
         "completed": completed_tasks
     }
 
-    # ================= TASK PRIORITY ANALYTICS =================
+    # ================= PRIORITY ANALYTICS =================
     priority_stats = tasks.values('priority').annotate(
         total=Count('id')
     )
@@ -438,11 +406,8 @@ def leader_dashboard(request):
         "📈 Improve volunteer performance"
     ]
 
-    # ================= RENDER =================
-    return render(request, "dashboard.html", {
-
-        # PROJECTS
-        "projects": projects,
+    # ================= CONTEXT =================
+    context = {
 
         # EVENTS
         "events": events,
@@ -454,7 +419,7 @@ def leader_dashboard(request):
         "total_volunteers": total_volunteers,
         "total_leaders": total_leaders,
 
-        # TASKS (CONTROL CENTER)
+        # TASKS
         "tasks": tasks,
         "total_tasks": total_tasks,
         "pending_tasks": pending_tasks,
@@ -465,7 +430,7 @@ def leader_dashboard(request):
         # CHART DATA
         "task_status_chart": task_status_chart,
         "priority_stats": priority_stats,
-        "volunteer_task_performance": volunteer_task_performance,
+        "task_performance": task_performance,
 
         # VOTERS
         "total_voters": total_voters,
@@ -478,9 +443,10 @@ def leader_dashboard(request):
 
         # UI
         "notifications": notifications,
-    })
+    }
 
-
+    return render(request, "dashboard.html", context)
+    
 # ================= admin_dashboard =================
 
 
@@ -1056,6 +1022,7 @@ def admin_volunteer_details(request, station_id):
     ], safe=False)
 
 # ================= manage_users =================
+
 @login_required
 def manage_users(request):
 
@@ -1064,14 +1031,15 @@ def manage_users(request):
 
     from django.db.models import Count, Q
 
-    # ✅ ADD TASK STATS HERE
-    users = User.objects.all().annotate(
-        total_tasks=Count('tasks_assigned'),
-        completed_tasks=Count('tasks_assigned', filter=Q(tasks_assigned__status='completed')),
-        pending_tasks=Count('tasks_assigned', filter=Q(tasks_assigned__status='pending')),
-        in_progress_tasks=Count('tasks_assigned', filter=Q(tasks_assigned__status='in_progress')),
+    # ================= USERS WITH TASK STATS =================
+    users = User.objects.annotate(
+        total_tasks=Count('tasks_created'),
+        completed_tasks=Count('tasks_created', filter=Q(tasks_created__status='completed')),
+        pending_tasks=Count('tasks_created', filter=Q(tasks_created__status='pending')),
+        in_progress_tasks=Count('tasks_created', filter=Q(tasks_created__status='in_progress')),
     ).order_by("-id")
 
+    # ================= LOOKUP DATA =================
     wards = Ward.objects.all()
     stations = PollingStation.objects.all()
     events = Event.objects.all()

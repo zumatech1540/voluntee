@@ -2,16 +2,8 @@ from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from django.conf import settings
-from django.db import models
-from django.utils import timezone
 import hashlib
-User = settings.AUTH_USER_MODEL
-
-
 from datetime import timedelta
-import hashlib
-import random
 
 
 # ================= LOCATION MODELS =================
@@ -345,17 +337,11 @@ class Task(models.Model):
     description = models.TextField()
 
     assigned_by = models.ForeignKey(
-    User,
-    on_delete=models.CASCADE,
-    related_name='tasks_created',
-    null=True,
-    blank=True
-)
-
-    assigned_by = models.ForeignKey(
-    settings.AUTH_USER_MODEL,
-    on_delete=models.CASCADE,
-    related_name='tasks_created'
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='tasks_created',
+        null=True,
+        blank=True
     )
 
     event = models.ForeignKey(
@@ -379,11 +365,10 @@ class Task(models.Model):
 
     due_date = models.DateField(null=True, blank=True)
 
-    # 🔥 IMPROVED FEEDBACK SYSTEM
     feedback = models.TextField(blank=True, null=True)
 
     feedback_by = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -396,7 +381,7 @@ class Task(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.title} → {self.assigned_to}"
+        return self.title
 
 # =================TaskComment=================
 class TaskComment(models.Model):
