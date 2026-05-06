@@ -206,7 +206,7 @@ def dashboard_redirect(request):
         return redirect("leader_dashboard")
 
     else:
-        return redirect("volunteer_dashboard")
+        return redirect("home")
 
 # ================= home =================
 def home(request):
@@ -219,7 +219,7 @@ def home(request):
     return render(request, "home.html", {
         "tasks": tasks
     })
-# ================= volunteer_home =================
+# ================= heat_map =================
 
 
 @login_required
@@ -263,7 +263,7 @@ def heat_map(request):
         "data": data
     })
     
-# ================= volunteer_home =================
+# ================= voter_list =================
 @login_required
 def voter_list(request):
 

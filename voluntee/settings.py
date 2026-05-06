@@ -16,7 +16,7 @@ ALLOWED_HOSTS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://community-volunteer.onrender.com"
+    "https://community-volunteer.onrender.com",
 ]
 
 # ================= DATABASE =================
