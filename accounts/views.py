@@ -13,10 +13,7 @@ from accounts.utils.permissions import admin_required, leader_required, voluntee
 from datetime import date, timedelta
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from datetime import date
+from django.contrib.auth import get_user_model
 import openpyxl
 import urllib.parse
 
@@ -193,20 +190,23 @@ def login_view(request):
 # ================= dashboard_redirect =================
 
 
+
+
 @login_required
 def dashboard_redirect(request):
 
     user = request.user
-    role = getattr(user, "role", "volunteer")
 
-    if user.is_superuser or role == "admin":
+    # SUPERUSER ALWAYS FIRST
+    if user.is_superuser:
         return redirect("admin_dashboard")
 
-    elif role == "leader":
+    role = getattr(user, "role", "volunteer")
+
+    if role == "leader":
         return redirect("leader_dashboard")
 
-    else:
-        return redirect("home")
+    return redirect("home")
 
 # ================= home =================
 def home(request):
@@ -314,6 +314,20 @@ def my_tasks(request):
     })
 
 
+# ================= create_admin =================
+
+
+def create_admin(request):
+    User = get_user_model()
+
+    if not User.objects.filter(username="admin").exists():
+        User.objects.create_superuser(
+            username="admin",
+            email="admin@gmail.com",
+            password="admin12345"
+        )
+
+    return HttpResponse("Admin created")
 
 # ================= LEADER DASHBOARD =================
 
