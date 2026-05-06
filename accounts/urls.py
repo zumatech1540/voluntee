@@ -71,6 +71,8 @@ urlpatterns = [
     path("make-volunteer/<int:id>/", views.make_volunteer, name="make_volunteer"),
     path("make-admin/<int:id>/", views.make_admin, name="make_admin"),
     path("remove-admin/<int:id>/", views.remove_admin, name="remove_admin"),
+    path("user-tasks/<int:id>/", views.user_tasks_admin, name="user_tasks_admin"),  
+    
 
     # ================= TASKS =================
     path("tasks/", views.my_tasks, name="my_tasks"),
