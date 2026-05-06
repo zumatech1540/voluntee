@@ -2,12 +2,15 @@ from pathlib import Path
 import os
 import dj_database_url
 
+# ================= BASE =================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ================= SECURITY =================
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-DEBUG = os.environ.get("RENDER") is None
+
+RENDER = os.environ.get("RENDER")
+
+DEBUG = not RENDER
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -19,16 +22,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://community-volunteer.onrender.com",
 ]
 
-# ================= DATABASE =================
-DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
-        ssl_require=not DEBUG,
-    )
-}
-
-# ================= APPS =================
+# ================= APPLICATIONS =================
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -77,6 +71,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "voluntee.wsgi.application"
 
+# ================= DATABASE =================
+DATABASES = {
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+        ssl_require=bool(RENDER),
+    )
+}
+
 # ================= PASSWORD VALIDATION =================
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -85,20 +88,22 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# ================= INTERNATIONAL =================
+# ================= INTERNATIONALIZATION =================
 LANGUAGE_CODE = "en-us"
+
 TIME_ZONE = "Africa/Nairobi"
+
 USE_I18N = True
 USE_TZ = True
 
-# ================= STATIC =================
+# ================= STATIC FILES =================
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# ================= MEDIA =================
+# ================= MEDIA FILES =================
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
@@ -108,5 +113,21 @@ AUTH_USER_MODEL = "accounts.User"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
 
+# ================= DEFAULT PRIMARY KEY =================
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# ================= SECURITY (PRODUCTION FIX) =================
+if RENDER:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+else:
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
