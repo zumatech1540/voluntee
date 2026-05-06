@@ -339,7 +339,7 @@ class Task(models.Model):
     assigned_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='tasks_assigned',
+       related_name='tasks_created', 
         null=True,
         blank=True
     )
@@ -382,7 +382,7 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
-        
+
 # =================TaskComment=================
 class TaskComment(models.Model):
 

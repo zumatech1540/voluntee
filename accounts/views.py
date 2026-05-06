@@ -11,7 +11,9 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
 from accounts.utils.permissions import admin_required, leader_required, volunteer_required
 from datetime import date, timedelta
-
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from datetime import date
 import openpyxl
 import urllib.parse
 
@@ -315,14 +317,14 @@ def my_tasks(request):
 
 
 # ================= LEADER DASHBOARD =================
+
+
 @login_required
 def leader_dashboard(request):
 
-    if not is_leader(request.user): return redirect("home")
-
-    from django.db.models import Count, Q
-    from datetime import date
-    from .models import Task, Voter, User, Event
+    # ================= ACCESS CONTROL =================
+    if not is_leader(request.user):
+        return redirect("home")
 
     # ================= EVENTS =================
     if request.user.is_superuser:
@@ -345,7 +347,11 @@ def leader_dashboard(request):
     if request.user.is_superuser:
         tasks = Task.objects.all()
     else:
+        # ✅ CORRECT: using field (not related_name)
         tasks = Task.objects.filter(assigned_by=request.user)
+
+        # OR (same result, uses related_name)
+        # tasks = request.user.tasks_created.all()
 
     total_tasks = tasks.count()
     pending_tasks = tasks.filter(status='pending').count()
